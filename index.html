@@ -802,8 +802,10 @@ $('copy-summary').addEventListener('click',()=>{ if(lastCheck) copyText(summaryL
 const CHAIN_URL = "https://art-speed.app.n8n.cloud/webhook/chain";
 async function loadChain(){
   try{
-    const r=await fetch(CHAIN_URL,{cache:'no-store'}); if(!r.ok) return;
-    const nodes=await r.json(); if(!Array.isArray(nodes)) return; let added=0;
+    let nodes=null;
+    try{ const r=await fetch(CHAIN_URL,{cache:'no-store'}); if(r.ok) nodes=await r.json(); }catch(e){}
+    if(!Array.isArray(nodes)){ try{ const r2=await fetch('chain.json',{cache:'no-store'}); if(r2.ok) nodes=await r2.json(); }catch(e){} }
+    if(!Array.isArray(nodes)) return; let added=0;
     for(const n of nodes){ if(!n||!n.id||!n.spec||nodesById.has(n.id)||!nodesById.has(n.parent)) continue; LINEAGE.push(n); nodesById.set(n.id,n); added++; }
     if(added){ parsedById.clear(); mParent=latestLeaf(); renderHome(); if(current==='chain'){ renderTree(); renderBoards(); } if(current==='model') setModelLinks(); if(current==='break'||current==='fix') toast('The chain moved on: '+latestLeaf()+' is now current. Finish this round, then play the new one.'); }
   }catch(e){}

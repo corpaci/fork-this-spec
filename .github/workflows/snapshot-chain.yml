@@ -1,0 +1,37 @@
+name: Snapshot the chain
+
+# Fetches the live chain from n8n and commits it when it changed, so the
+# history of accepted revisions lives in git as well as in the n8n table.
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch chain feed
+        run: |
+          curl -fsS -A "chain-snapshot" "https://art-speed.app.n8n.cloud/webhook/chain" -o chain.new.json
+          python3 -c "import json;json.load(open('chain.new.json'))"
+          python3 - <<'PY'
+          import json
+          nodes=json.load(open('chain.new.json'))
+          json.dump(nodes,open('chain.json','w'),indent=1,ensure_ascii=False)
+          PY
+          rm chain.new.json
+      - name: Commit if changed
+        run: |
+          git config user.name "chain-snapshot"
+          git config user.email "actions@users.noreply.github.com"
+          if ! git diff --quiet -- chain.json; then
+            n=$(python3 -c "import json;print(len(json.load(open('chain.json'))))")
+            git add chain.json
+            git commit -m "chain: $n accepted revisions as of $(date -u +%Y-%m-%dT%H:%MZ)"
+            git push
+          fi
