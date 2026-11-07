@@ -1,10 +1,10 @@
 name: Snapshot the chain
 
-# Fetches the live chain from n8n and commits it when it changed, so the
+# Fetches the live chain from n8n every five minutes (GitHub's floor) and commits it when it changed, so the
 # history of accepted revisions lives in git as well as in the n8n table.
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 permissions:

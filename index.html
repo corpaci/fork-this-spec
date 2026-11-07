@@ -244,7 +244,7 @@ a{color:var(--accent)}
   <section id="view-chain" hidden>
     <h2>The chain</h2>
     <p class="small" id="lineage-count"></p>
-    <p class="small">The chain is read live from the submission table every minute. Each node's full record, including the verdict the page computed when it was submitted, is kept there; the page's own history is in <a href="https://github.com/corpaci/fork-this-spec/commits/main" target="_blank" rel="noopener">its git log</a>.</p>
+    <p class="small">The chain is read live from the submission table every thirty seconds. Each node's full record, including the verdict the page computed when it was submitted, is kept there; the page's own history is in <a href="https://github.com/corpaci/fork-this-spec/commits/main" target="_blank" rel="noopener">its git log</a>.</p>
     <div class="tree" id="tree"></div>
     <div id="node-detail" style="margin-top:14px"></div>
     <h2 style="margin-top:22px">Breaks that got past the tests</h2>
@@ -812,7 +812,7 @@ async function loadChain(){
 }
 // first paint
 const d=new Date(); $('date-line').textContent=`Puzzle #${puzzleNo()} · ${d.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'})} · Swiss AI Safety Days, ETH Zürich`;
-renderAbout(); renderHome(); loadChain(); setInterval(loadChain,60000);
+renderAbout(); renderHome(); loadChain(); setInterval(loadChain,30000);
 const h0=location.hash.slice(1); go(h0==='sabotage'?'break':(h0==='repair'?'fix':(h0||'home')));
 if(!store.get('seenHowto2',false)){ openDialog(HOWTO.home); store.set('seenHowto2',true); }
 </script>
