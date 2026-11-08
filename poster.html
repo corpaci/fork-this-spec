@@ -41,6 +41,9 @@ code{font-family:var(--font-mono);font-size:.95em}
 .promise-box{border:1.4mm solid var(--ink);border-radius:4mm;padding:11mm 13mm;background:var(--panel)}
 .promise{font-family:var(--font-display);font-weight:600;font-size:15.5mm;line-height:1.25;margin:0;letter-spacing:-0.005em}
 .promise b{color:var(--teal)}
+.doclab{font-family:var(--font-mono);font-size:6.2mm;letter-spacing:.04em;text-transform:uppercase;color:var(--teal);margin:4mm 0 2mm}
+.orig{margin:0;padding-left:9mm;font-family:var(--font-display);font-size:8.2mm;line-height:1.3}
+.orig li{margin:0 0 2.2mm}
 .formal{font-family:var(--font-mono);font-size:8.8mm;line-height:1.7;background:var(--panel-2);border-radius:3mm;padding:5mm 7mm;margin-top:6mm;white-space:pre-wrap;overflow-wrap:anywhere}
 .formal .k{color:var(--muted)}
 /* trail */
@@ -114,12 +117,12 @@ code{font-family:var(--font-mono);font-size:.95em}
 
 <p class="hint">Print preview: A0 portrait (841 × 1189 mm). Scales cleanly to A1. Print with margins set to none, or use the PDF generated alongside.</p>
 <div class="sheet">
-  <div class="stamp">ANCHOR · v0 · THIS SHEET DOES NOT CHANGE</div>
+  <div class="stamp">ORIGINALS · PRINTED HERE · DO NOT CHANGE</div>
   <div class="band">
     <div>
       <p class="kicker">Swiss AI Safety Days · ETH Zürich · 7–8 Nov 2026 · Guaranteed Safe AI, the spec half</p>
       <h1>Small edits.<br><em>Different worlds.</em></h1>
-      <p class="sub">How far can a safety specification drift while every revision looks reasonable?</p>
+      <p class="sub">Two real specifications. Change one word at a time. Does the meaning survive?</p>
     </div>
     <div class="who"><b>Luiza Corpaci</b>TU Wien · Apart Research, Secure Program Synthesis · CAISH MARS V<br>with Malhar Alpesh Patel · <i>When Specifications Drift</i>, NeurIPS 2026 VeriCodeGen<br>corpaci.luiza@gmail.com</div>
   </div>
@@ -133,25 +136,25 @@ code{font-family:var(--font-mono);font-size:.95em}
           <div class="cell"><div class="big">P ⊨ φ</div><p class="body"><b>Verification.</b> Does the system satisfy the spec? Provers do this.</p></div>
           <div class="cell v2"><div class="big">φ ≈ intent</div><p class="body"><b>Validation.</b> Does the spec still say what we meant? Nobody does this, and specs get revised all the time.</p></div>
         </div>
-        <p class="small" style="margin-top:6mm">Guaranteed Safe AI asks for a spec, a world model and a verifier. Changing a definition does not make a proof invalid. Three questions survive every revision: <b>What was proved? Under which assumptions? Does that still establish what we wanted?</b></p>
+        <p class="small" style="margin-top:6mm">Guaranteed Safe AI asks for a spec, a world model and a verifier. Constitutions and model specs are revised in public, one wording at a time, and a changed word does not invalidate anything downstream. Three questions survive every revision: <b>What was proved? Under which assumptions? Does that still establish what we wanted?</b></p>
       </div>
 
       <div class="box">
-        <h3>Two distances, measured separately</h3>
+        <h3>What is measured</h3>
         <div class="dist">
-          <div><b>textual</b><span>How much did the wording change? Token edit distance.</span></div>
-          <div><b>behavioural</b><span>Which executions became permitted or forbidden? Counted over a fixed, finite universe of executions.</span></div>
+          <div><b>textual</b><span>How many words differ from the original. The number in the top bar of the page.</span></div>
+          <div><b>crowd</b><span>For every change, how many visitors judged it <span class="pill equivalent">same</span><span class="pill incomparable">changed</span><span class="pill uncertified">unresolved</span>, before and after seeing the dictionary.</span></div>
         </div>
-        <p class="small" style="margin-top:5mm">A revision is represented by the set of executions it permits. Against its parent and against v0 it is <span class="pill equivalent">equivalent</span><span class="pill weaker">weaker</span><span class="pill stronger">stronger</span><span class="pill incomparable">mixed</span> or <span class="pill uncertified">unresolved</span>.</p>
-        <p class="small" style="margin-top:3mm">Different meaning is not automatically worse. Separately marked: do newly permitted executions break the budget? Do newly forbidden ones block legitimate work?</p>
+        <p class="small" style="margin-top:5mm">There is no oracle for whether "flourishing" means "thriving". Nobody is told who is right. Disagreement is the result, not noise, and it is recorded per word.</p>
+        <p class="small" style="margin-top:3mm">The formal companion, where an oracle does exist, is linked from the page: a compute-budget rule over 2,016 executions, where every one-token edit has a checkable consequence.</p>
       </div>
 
       <div class="box">
-        <h3>Who accepts a revision</h3>
+        <h3>How the chain moves</h3>
         <div class="gates">
-          <div><b>reviewer</b><span>Eight public executions. A revision is accepted when they are judged exactly as before.</span></div>
-          <div><b>oracle</b><span>2,016 executions: 8 public, 8 hidden hand-written, 2,000 sampled from the toy world. Measures both distances.</span></div>
-          <div><b>chain</b><span>Visitors revise the <i>latest</i> accepted revision, not v0. The paper keeps the initial intent; the screen shows what revisions have made of it.</span></div>
+          <div><b>change</b><span>Tap a word. A dictionary sheet shows its definition and up to eight alternatives with theirs. Pick one. One word per change.</span></div>
+          <div><b>judge</b><span>Other visitors see the sentence before and after. Same meaning or changed? Commit, read both definitions, decide again.</span></div>
+          <div><b>chain</b><span>Visitors change the <i>latest</i> text, not the original. The paper keeps the originals; the screen shows what the swaps have made of them.</span></div>
         </div>
       </div>
 
@@ -161,7 +164,7 @@ code{font-family:var(--font-mono);font-size:.95em}
           <div><b>patch</b><span>The patch redefines "authorized user". The proof still passes.</span></div>
           <div><b>compute</b><span>"No large run on undeclared chips." Undeclared is invisible by construction.</span></div>
           <div><b>release</b><span>"No deployment with a dangerous capability unless mitigated." Evals never run.</span></div>
-          <div><b>model spec</b><span>Model specs ship with textual diffs. Nobody publishes the behavioural one.</span></div>
+          <div><b>model spec</b><span>Model specs and constitutions ship with textual diffs. Nobody publishes the semantic one.</span></div>
         </div>
       </div>
     </div>
@@ -169,59 +172,66 @@ code{font-family:var(--font-mono);font-size:.95em}
     <!-- CENTRE -->
     <div class="col">
       <div class="promise-box">
-        <h3>The initial intent · v0 · printed here, revised there</h3>
-        <p class="promise"><b>One task has a total allowance of 10 compute credits.</b> All computation initiated for that task, including delegated work, retries and restarts, consumes the same allowance, as the independent meter reads it. No execution may exceed it.</p>
-<div class="formal"><span class="k">used:</span>  metered(main) + sum(metered(descendants)) + metered(retries) + metered(restarts) + sum(metered(relabelled))
-<span class="k">claim:</span> used &lt;= 10</div>
+        <h3>The originals · five sentences each, assembled from quotations · printed here, rewritten there</h3>
+        <p class="doclab">Anthropic · Claude's constitution</p>
+        <ol class="orig">
+          <li>“We want Claude to be exceptionally helpful while also being honest, thoughtful, and caring about the world.”</li>
+          <li>Claude should be broadly safe, broadly ethical, compliant with Anthropic’s guidelines, and genuinely helpful, and “in cases of apparent conflict, Claude should generally prioritize these properties in the order in which they are listed.”</li>
+          <li>Broadly safe means “not undermining appropriate human mechanisms to oversee AI during the current phase of development,” including “the ability of legitimate principals to adjust, correct, retrain, or shut down AI systems.”</li>
+          <li>“Claude should basically never directly lie or actively deceive anyone it’s interacting with,” and should be “diplomatically honest rather than dishonestly diplomatic.”</li>
+          <li>“We want Claude’s helpfulness to flow from deep and genuine care for users’ overall flourishing,” on “a path towards mutual flourishing for both AI and humanity.”</li>
+        </ol>
+        <p class="doclab">OpenAI · Model Spec, 29 October 2026</p>
+        <ol class="orig">
+          <li>“Our goal is to create models that are useful, safe, and aligned with the needs of users and developers — while advancing our mission to ensure that artificial general intelligence benefits all of humanity.”</li>
+          <li>“Humanity should be in control of how AI is used and how AI behaviors are shaped.”</li>
+          <li>Instructions carry different levels of authority — Root, System, Developer, User, Guideline — and “higher-authority instructions take precedence over lower-authority ones.”</li>
+          <li>“Represent facts, evidence, uncertainty, capabilities, and actions truthfully.”</li>
+          <li>OpenAI aims to “prevent our models from causing serious harm to users or others,” and the model “must not optimize for or directly pursue any additional goals as ends in themselves.”</li>
+        </ol>
       </div>
 
       <div class="box">
-        <h3>A trail of reasonable-looking edits</h3>
+        <h3>A trail of reasonable-looking swaps</h3>
         <div class="trail">
           <div class="t">
             <h4>Wording</h4>
-            <div class="frag">"All computation <b>initiated for</b> the task…"</div>
+            <div class="frag">"…care for users’ overall <b>flourishing</b>"</div>
             <div class="arrow">↓</div>
-            <div class="frag">"All computation <b>performed by</b> the task…"</div>
+            <div class="frag">"…care for users’ overall <b>thriving</b>"</div>
             <div class="arrow">↓</div>
-            <div class="frag">"All computation <b>recorded against</b> the task…"</div>
-            <p class="lab">Three small textual steps. Each reads like a clarification.</p>
+            <div class="frag">"…care for users’ overall <b>prosperity</b>"</div>
+            <p class="lab">Each step is a dictionary synonym of the one before.</p>
           </div>
           <div class="t">
-            <h4>Permitted executions</h4>
-            <div class="frag same">main 6, two workers 3 and 3 → refused (12 &gt; 10)</div>
+            <h4>What the dictionary says</h4>
+            <div class="frag same">flourishing · growing, thriving, prospering</div>
             <div class="arrow">↓</div>
-            <div class="frag moved">workers' spend is no longer "by the task" → certified at 6</div>
+            <div class="frag moved">thriving · that thrives; successful</div>
             <div class="arrow">↓</div>
-            <div class="frag moved">work filed under another name is not "recorded against" → certified</div>
-            <p class="lab moved">Two behavioural steps. The proof passes at every stage.</p>
+            <div class="frag moved">prosperity · good fortune and wealth</div>
+            <p class="lab moved">Two synonym steps. The care is now about money.</p>
           </div>
         </div>
-        <p class="ask">At which edit did <em>the intent</em> change?</p>
-        <p class="small" style="margin-top:4mm;text-align:center">Illustrative candidates, not established equivalences. The page measures the real ones.</p>
+        <p class="ask">At which word did <em>the intent</em> change?</p>
+        <p class="small" style="margin-top:4mm;text-align:center">Illustrative. The page records the real swaps and what the crowd made of each.</p>
       </div>
 
       <div class="box tint">
         <div class="qrblock">
           <div class="qr" id="qr"></div>
           <div>
-            <p class="cta">Judge a revision. <em>Then revise one yourself.</em></p>
+            <p class="cta">Judge a change. <em>Then change a word yourself.</em></p>
             <div class="roles">
-              <div class="role"><i class="c" style="background:var(--ink)">?</i><span><b>You are the overseer.</b> Same meaning or changed? Commit, get help, judge again, replay the counterexample. Three rounds, two minutes.</span></div>
-              <div class="role"><i class="b">≈</i><span><b>Revise it.</b> Up to three token edits that change the wording and not the meaning. The reviewer accepts; the oracle tells you how far you really moved.</span></div>
-              <div class="role"><i class="a">⌁</i><span><b>Change the intent.</b> Get a revision accepted that lets an over-budget execution through.</span></div>
-              <div class="role"><i class="c">AI</i><span><b>Let a model revise it.</b> Scan a model below; it gets the latest revision and the task. Paste its answer back.</span></div>
+              <div class="role"><i class="c" style="background:var(--ink)">?</i><span><b>Judge a change.</b> One word moved. Same meaning or changed? Commit, read both definitions, decide again, see how others judged. Four rounds, two minutes.</span></div>
+              <div class="role"><i class="b">≈</i><span><b>Change a word.</b> Tap it, see what it means, pick an alternative with its definition. It becomes the current text for everyone.</span></div>
+              <div class="role"><i class="a">⌁</i><span><b>The drift so far.</b> Every swap in order with the crowd’s verdict on each, for both specifications.</span></div>
+              <div class="role"><i class="c">∑</i><span><b>The formal companion.</b> A compute-budget rule where an oracle checks what each one-token edit does.</span></div>
             </div>
             <p class="url" id="url"></p>
           </div>
         </div>
-        <div class="shortcuts">
-          <div class="sc"><div class="q" id="qr-claude"></div><b>Claude</b><span>revises the latest, prompt pasted</span></div>
-          <div class="sc"><div class="q" id="qr-chatgpt"></div><b>ChatGPT</b><span>revises the latest, prompt pasted</span></div>
-          <div class="sc"><div class="q" id="qr-pplx"></div><b>Perplexity</b><span>revises the latest, prompt pasted</span></div>
-          <div class="sc sab"><div class="q" id="qr-sab"></div><b>Change the intent</b><span>straight into the adversarial role</span></div>
         </div>
-      </div>
     </div>
 
     <!-- RIGHT -->
@@ -235,25 +245,25 @@ code{font-family:var(--font-mono);font-size:.95em}
           <div class="num"><b>30.3%</b><span>provably weaker on confusable identifiers; 93.7% of those merged variables</span></div>
           <div class="num"><b>71 / 38 / 25%</b><span>meaning surviving six translation hops, three models, exploratory</span></div>
         </div>
-        <p class="small" style="margin-top:5mm">Selecting on validity moved failures from loud to silent without improving survival. Here the reviewer is the selector.</p>
+        <p class="small" style="margin-top:5mm">Selecting on validity moved failures from loud to silent without improving survival. Here the dictionary is the selector: every swap is a certified synonym.</p>
       </div>
 
       <div class="box" style="border-color:var(--ink);border-width:0.9mm">
-        <h3>You are the overseer</h3>
-        <p class="body">Two rules, original and revision. <b>Same meaning or changed?</b> Commit, then get help assigned at random: a second look, an AI critique, or a critique with a witness execution you can replay. Judge again. Then the oracle reveals the truth. Some critiques lie.</p>
-        <p class="small" style="margin-top:4mm">Tallied per form of help: drift caught, false alarms, judgments rescued, judgments misled. Does assistance make the decision easier to <i>verify</i>, or only easier to believe? <b>Exact equivalence is transitive:</b> if every revision had preserved meaning, the chain could not drift.</p>
+        <h3>Judge a change</h3>
+        <p class="body">A sentence before and after one word moved. <b>Same meaning or changed?</b> Commit, then the dictionary shows both definitions. Decide again. Then see how others judged the same swap. Nobody is told who is right.</p>
+        <p class="small" style="margin-top:4mm">Tallied per swap: same, changed, unresolved, and how often the definitions changed a mind. <b>Exact equivalence is transitive:</b> if every swap had preserved meaning, the chain could not drift. Where the crowd splits, the word was carrying more than one meaning.</p>
       </div>
 
       <div class="box">
-        <h3>The toy world behind the distances</h3>
-        <p class="small">A main agent runs a task with ten credits; it can delegate, workers can delegate further; attempts fail and are retried; a restart gives a fresh counter; a worker can file its work under another task's name; every unit of work is metered and self-reported. Six ways a revision can leave the promise: children for descendants, retries uncounted, relabelled work excluded, restart resets the counter, max for sum, self-report for the meter. The last is tool-call spoofing, which METR found in at least 96 transcripts of the July 2026 OpenAI evaluation.</p>
+        <h3>Where these specifications sit</h3>
+        <p class="small">Written constitutions and model specs are one of five families of answers to "aligned to what". The others: assistance games, where the agent stays uncertain about human objectives (Russell et al., CIRL); approval-directed agents and amplified oversight (Christiano); corrigibility, staying correctable against the current objective (Soares, Fallenstein, Yudkowsky, Armstrong); and collective, democratically informed alignment (Collective Constitutional AI). Coherent extrapolated volition is the provocative comparison. Each is a text somebody will revise.</p>
       </div>
 
       <div class="box tint">
         <h3>Ask me about</h3>
         <ol class="qs">
           <li>Iterated revision with a reviewer is a refinement process. Does it converge, and to whose intent?</li>
-          <li>Which clauses should never be allowed to weaken, and who decides?</li>
+          <li>Which words in a constitution should never be allowed a synonym, and who decides?</li>
           <li>Can a revision step be typed as a lens whose backward map carries the preservation certificate?</li>
         </ol>
       </div>
@@ -261,25 +271,25 @@ code{font-family:var(--font-mono);font-size:.95em}
   </div>
 
   <div class="dots">
-    <h3>Stick a dot where your accepted revision landed</h3>
+    <h3>Stick a dot on the sentence you would change first</h3>
     <div class="axis">
-      <div class="bin"><div class="n">0</div><div class="l">intent intact</div></div>
-      <div class="bin"><div class="n">1–10</div><div class="l">executions flipped</div></div>
-      <div class="bin"><div class="n">11–50</div><div class="l"></div></div>
-      <div class="bin"><div class="n">51–200</div><div class="l"></div></div>
-      <div class="bin"><div class="n">201–1,000</div><div class="l"></div></div>
-      <div class="bin"><div class="n">&gt; 1,000</div><div class="l">of 2,016</div></div>
+      <div class="bin"><div class="n">1</div><div class="l">sentence</div></div>
+      <div class="bin"><div class="n">2</div><div class="l"></div></div>
+      <div class="bin"><div class="n">3</div><div class="l"></div></div>
+      <div class="bin"><div class="n">4</div><div class="l"></div></div>
+      <div class="bin"><div class="n">5</div><div class="l"></div></div>
+      <div class="bin"><div class="n">none</div><div class="l">leave it</div></div>
     </div>
-    <div class="rowlab">Behavioural distance from v0 (the page shows it after the reviewer accepts)</div>
+    <div class="rowlab">Anthropic · Claude's constitution</div>
     <div class="track"></div>
-    <div class="rowlab">Behavioural distance from the revision you started from</div>
+    <div class="rowlab">OpenAI · Model Spec</div>
     <div class="track"></div>
-    <div class="note">Orange dot if the oracle says over-budget executions are now certified; blue if legitimate work is now refused; green if the initial intent is intact. Distances are over the 2,016 executions described above.</div>
+    <div class="note">Green dot if you believe the word you have in mind has a synonym that keeps the meaning. Orange if you believe any change to that sentence moves it. Write the word next to the dot.</div>
   </div>
 
   <div class="foot">
-    <div><b>The paper preserves the initial intent. The screen reveals what successive revisions have made of it.</b> Every accepted revision is kept with its author or model, its parent, both distances and a witness execution. The chain and the hidden executions are published after the event. · Boehm 1984 · Dalrymple et al. 2024 · METR, Aug 2026 · Shovelain &amp; Skalse 2022 · Videla 2024 · Patel &amp; Corpaci 2026</div>
-    <div style="text-align:right">Bring your model.<br><b>corpaci.luiza@gmail.com</b></div>
+    <div><b>The paper preserves the originals. The screen reveals what one-word changes have made of them.</b> Every change is kept with its author, the word pair, both definitions and the crowd’s verdict; the chain is published after the event. · Anthropic, Claude’s constitution · OpenAI, Model Spec 2026-10-29 · Hadfield-Menell et al. 2016 · Christiano 2014, 2018 · Soares et al. 2015 · Anthropic, Collective Constitutional AI 2023 · Patel &amp; Corpaci 2026</div>
+    <div style="text-align:right">Bring a word.<br><b>corpaci.luiza@gmail.com</b></div>
   </div>
 </div>
 
@@ -291,9 +301,5 @@ code{font-family:var(--font-mono);font-size:.95em}
   document.getElementById('url').textContent = PAGE;
   function draw(id, url, ec){ try{ var qr = qrcode(0, ec || 'M'); qr.addData(url); qr.make(); document.getElementById(id).innerHTML = qr.createSvgTag({cellSize:4, margin:0, scalable:true}); } catch(e){ document.getElementById(id).textContent = url; } }
   draw('qr', PAGE, 'H');
-  draw('qr-claude', GO + '?to=claude&mode=revise');
-  draw('qr-chatgpt', GO + '?to=chatgpt&mode=revise');
-  draw('qr-pplx', GO + '?to=perplexity&mode=revise');
-  draw('qr-sab', GO + '?to=page&mode=break');
 })();
 </script>

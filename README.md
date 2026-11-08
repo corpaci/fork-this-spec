@@ -12,3 +12,8 @@ Roles: *You are the overseer* (judge whether a revision kept the meaning; commit
 - `submissions/` — one file per submission, committed by the n8n form workflow.
 
 Companion to *When Specifications Drift: Measuring Semantic Preservation Across LLM Representations* (Patel & Corpaci, NeurIPS 2026 Workshop on AI for Verifiable Coding). MIT License.
+
+
+## November 8, afternoon: the word game
+
+The main page now carries two real specifications, five sentences each assembled from verbatim fragments of Claude's constitution (Anthropic) and the OpenAI Model Spec (29 October 2026). Visitors change one word at a time, choosing from dictionary alternatives with definitions (Datamuse), and other visitors judge whether the meaning survived, before and after seeing both definitions. There is no oracle; disagreement is the record. The compute-budget game, where an oracle exists, lives on at `compute/`.
