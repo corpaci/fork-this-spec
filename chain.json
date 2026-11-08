@@ -1,1 +1,26 @@
-[]
+[
+ {
+  "kind": "word",
+  "id": "w-a-mw7q9kvj-6uhh",
+  "parent": "v0",
+  "doc": "anthropic",
+  "s": 0,
+  "i": 11,
+  "from": "exceptionally",
+  "to": "remarkably",
+  "author": "anonymous",
+  "ts": "2026-11-08T11:07:05"
+ },
+ {
+  "kind": "word",
+  "id": "w-a-mw7q9rfm-bcfa",
+  "parent": "w-a-mw7q9kvj-6uhh",
+  "doc": "anthropic",
+  "s": 1,
+  "i": 16,
+  "from": "compliant",
+  "to": "obedient",
+  "author": "anonymous",
+  "ts": "2026-11-08T11:07:13"
+ }
+]
