@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The paper behind the game</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
+<style>
+/* A2 portrait companion sheet to the Semantic Drift poster: the paper summarised, with the OpenReview link. */
+@page{size:420mm 594mm;margin:0}
+:root{--ink:#2a2233;--muted:#6b6275;--purple:#7f5aa5;--purple-deep:#5e3f80;--lilac:#e9e1f2;--paper:#fcfbfd;--line:#ddd6e4;--pink:#f6d9e4;--peach:#f8dfc5;--lemon:#f4edba;--mint:#d8eadb;--blue:#d8e9f5;--lavender:#e6dcfb}
+*{box-sizing:border-box}
+html,body{margin:0;background:#e9e6ee}
+body{font-family:Montserrat,system-ui,sans-serif;color:var(--ink)}
+.sheet{width:420mm;height:594mm;background:var(--paper);margin:0 auto;padding:15mm 20mm 11mm;display:grid;grid-template-rows:auto auto 1fr auto;gap:5mm;overflow:hidden;position:relative}
+@media screen{body{padding:20px 0}.sheet{box-shadow:0 10px 40px rgba(0,0,0,.25)}}
+@media print{body{background:#fff}.sheet{box-shadow:none}}
+h1{font-family:"Bebas Neue",Impact,sans-serif;font-weight:400;font-size:30mm;line-height:.92;letter-spacing:.01em;color:var(--purple);margin:0}
+h2{font-family:"Bebas Neue",Impact,sans-serif;font-weight:400;font-size:10.5mm;letter-spacing:.03em;color:var(--ink);margin:0 0 3mm;padding-bottom:1.5mm;border-bottom:1.2mm solid var(--ink)}
+h3{font-size:5.2mm;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--purple);margin:0 0 2mm}
+p{margin:0 0 2.4mm;font-size:4.8mm;line-height:1.4}
+.small{font-size:4.2mm;line-height:1.36;color:var(--muted)}
+.rainbow{height:1.6mm;background:linear-gradient(90deg,var(--pink),var(--peach),var(--lemon),var(--mint),var(--blue),var(--lavender));border-radius:1mm}
+.head{display:grid;grid-template-columns:1fr auto;gap:12mm;align-items:end}
+.head .sub{font-size:6mm;line-height:1.35;color:var(--ink);margin-top:4mm;max-width:300mm}
+.head .sub i{color:var(--purple-deep)}
+.who{text-align:right;font-size:4.6mm;line-height:1.5;color:var(--muted)}
+.who b{display:block;font-size:6mm;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);font-family:Montserrat;font-weight:700}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:12mm;align-content:start}
+.col{display:grid;gap:5mm;align-content:start}
+.box{min-width:0}
+.kv{display:grid;grid-template-columns:44mm 1fr;gap:1.2mm 6mm;font-size:4.6mm;line-height:1.36}
+.kv b{color:var(--purple-deep);font-weight:700}
+.kv div{padding:2mm 0;border-bottom:.4mm solid var(--line)}
+ul{margin:0;padding-left:6.5mm;font-size:4.75mm;line-height:1.4}
+li{margin-bottom:2mm}
+li b{color:var(--purple-deep)}
+.link{display:grid;grid-template-columns:62mm 1fr;gap:7mm;align-items:center;background:var(--lilac);border-radius:4mm;padding:7mm}
+.link .qr{width:62mm;height:62mm;background:#fff;padding:3mm;border-radius:2mm}
+.link .qr svg{width:100%;height:100%;display:block}
+.link .url{font-family:ui-monospace,Menlo,monospace;font-size:4.4mm;color:var(--purple-deep);overflow-wrap:anywhere;margin-top:2mm}
+.link p{margin:0 0 2mm}
+.chart{background:#fff;border:.4mm solid var(--line);border-radius:3mm;padding:5mm 6mm 3mm}
+.chart svg{width:100%;height:auto;display:block}
+.chart .cap{font-size:4.6mm;color:var(--muted);margin:2mm 0 0}
+.quote{border-left:1.6mm solid var(--purple);padding:1mm 0 1mm 6mm;font-style:italic;color:var(--ink);font-size:5.6mm;line-height:1.45}
+.foot{display:grid;grid-template-columns:1fr auto;gap:10mm;align-items:end;border-top:.5mm solid var(--line);padding-top:3mm;font-size:4.2mm;line-height:1.4;color:var(--muted)}
+.foot b{color:var(--ink)}
+.tag{display:inline-block;font-size:4.2mm;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--purple-deep);background:var(--lavender);border-radius:999px;padding:1mm 4mm;margin-right:2mm}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="head">
+    <div>
+      <h1>The paper<br>behind the game</h1>
+      <p class="sub"><i>When Specifications Drift: Measuring Semantic Preservation Across LLM Representations.</i><br>Malhar Alpesh Patel and Luiza Corpaci · NeurIPS 2026 Workshop on AI for Verifiable Coding (VeriCodeGen)</p>
+    </div>
+    <div class="who"><b>Luiza Corpaci</b>TU Wien · Apart Research · CAISH MARS V<br>Swiss AI Safety Days · ETH Zürich · 8 Nov 2026<br>corpaci.luiza@gmail.com</div>
+  </div>
+  <div class="rainbow"></div>
+
+  <div class="cols">
+    <!-- LEFT -->
+    <div class="col">
+      <div class="box">
+        <h2>In one paragraph</h2>
+        <p>Verification proves that an implementation satisfies a specification. It does not prove that a specification which has passed through a language model still means what the original meant. The paper measures that second gap in a domain where meaning can be certified: 500 identities about magmas, small algebraic structures, drawn from the Equational Theories Project, whose implication graph says exactly which law entails which. Each law is rendered in 18 deterministic representations, nine models are asked to write it back as an explicit equation, and a formal oracle labels every answer <b>equivalent</b>, <b>weaker</b>, <b>stronger</b> or <b>incomparable</b> to the source, or <b>uncertified</b> when the answer falls outside the oracle's catalogue. Uncertified is reported separately and never counted as drift.</p>
+      </div>
+
+      <div class="box">
+        <h2>Setup</h2>
+        <div class="kv">
+          <div><b>Laws</b></div><div>500 magma identities, stratified by order; a 150-law subset for repeats and follow-ups.</div>
+          <div><b>Representations</b></div><div>Canonical infix, LaTeX, prefix, postfix · Lean, TPTP, SMT-LIB · Python lambda, Cayley-table checker · bracket words, nested noun phrases, word problem · SSA, JSON AST, indented tree, DOT · integer slots, confusable names.</div>
+          <div><b>Models</b></div><div>Nine, in three roster tiers: Mistral Small 3.2, Qwen3-30B-A3B, Phi-4 · Gemini 2.5 Flash, Llama 4 Maverick, Grok 4.20 · DeepSeek V3.2, GPT-5.2, Claude Opus 5.</div>
+          <div><b>Calls</b></div><div>81,000 in the main sweep; 153,000 with repeats and three follow-up studies. Temperature zero and seeds where supported.</div>
+          <div><b>Oracle</b></div><div>A historical snapshot of the ETP implication graph, checked in both directions. Coverage failures are a separate outcome, not a verdict.</div>
+        </div>
+      </div>
+
+      <div class="box">
+        <h2>Why it matters for verifiable coding</h2>
+        <ul>
+          <li><b>Preservation is a separate obligation.</b> A certified weaker reconstruction admits objects the original excluded, and a later proof of that reconstruction cannot restore the lost requirement. Checking that the specification survived is a different check from proving code against it.</li>
+          <li><b>Keep direction and coverage in the interface.</b> A single pass/fail conflates opposite inclusion errors with out-of-coverage answers. Show intended-to-generated and generated-to-intended evidence, and an explicit uncertified outcome.</li>
+          <li><b>Identifiers and instructions deserve evaluation.</b> Preserve a bijection between source and target variables, check co-reference, and treat documentation and preservation instructions as part of the system under test.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="col">
+      <div class="link">
+        <div class="qr" id="qr"></div>
+        <div>
+          <span class="tag">Read the paper</span>
+          <p style="margin-top:2mm">Full text, appendices and reviews on OpenReview.</p>
+          <div class="url">openreview.net/forum?id=qtgG5HZSsk</div>
+          <p class="small" style="margin-top:3mm">Artifact, data and the certified oracle: <b>github.com/corpaci/SpecDrift</b></p>
+        </div>
+      </div>
+
+      <div class="box">
+        <h2>What we found</h2>
+        <ul>
+          <li><b>Representation matters enormously.</b> Certified recovery runs from 73.7% for mechanical bracket-word text to 8.5% for postfix notation, a 65-point span on the same 500 laws. Mechanical English beats symbolic prefix notation with the same word order.</li>
+          <li><b>Drift has a direction, and it concentrates.</b> Under confusable identifiers, 1,365 of 4,500 answers (30.3%) are provably weaker than the source; 93.7% of those use fewer distinct variables, consistent with two variables being read as one.</li>
+          <li><b>Look-alike letters are a cliff.</b> Across six identifier schemes recovery falls from 64.4% on canonical letters to 3.1% at Latin/Cyrillic homoglyphs; 81% of those answers are weaker, and 87% of merged pairs are a letter and its twin.</li>
+          <li><b>Reading instructions help, selectively.</b> Notation notes with examples recover large losses for some model and notation pairs; an explicit anti-transformation instruction improves even a verbatim-input control. Extra context alone does not.</li>
+          <li><b>Repeated sampling limits fine rankings.</b> Three samples per item show enough residual variability that single-run model orderings should not be read closely.</li>
+        </ul>
+      </div>
+
+      <div class="chart">
+        <h3>Certified recovery by representation</h3>
+        <div id="chart"></div>
+        <p class="cap">Share of 4,500 answers per representation that the oracle certified as equivalent to the source law. Pooled over nine models. Uncertified answers are counted as not recovered, not as wrong.</p>
+      </div>
+
+      <div class="box">
+        <h2>Limits, stated plainly</h2>
+        <p class="small">Short single equations, with common notation possibly present in pretraining. A fixed historical roster of API models with unequal settings; tier comparisons are descriptive. The oracle is a catalogue snapshot, so uncertified is a coverage statement, not a meaning statement. None of this estimates drift rates in deployed AI systems. What it does establish is that one-step rewriting by capable models produces thousands of certified strict weakenings, and that the direction can be measured.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div><b>From the paper to the poster game.</b> The paper measures drift where an oracle exists. The game asks the same question where none does: two published AI specifications, changed one word at a time by visitors and by models, judged by other visitors before and after dictionary help. The paper's vocabulary, same, changed, unresolved, is the game's.</div>
+    <div style="text-align:right"><span class="tag">corpaci.com/fork-this-spec</span></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+(function(){
+  try{ var qr=qrcode(0,'M'); qr.addData('https://openreview.net/forum?id=qtgG5HZSsk'); qr.make(); document.getElementById('qr').innerHTML=qr.createSvgTag({cellSize:4,margin:0,scalable:true}); }catch(e){ document.getElementById('qr').textContent='openreview.net/forum?id=qtgG5HZSsk'; }
+  var rows=[["bracket words", 73.71], ["SSA", 72.23], ["LaTeX", 71.4], ["SMT-LIB", 70.71], ["TPTP", 70.11], ["nested noun phrases", 68.5], ["Python lambda", 67.93], ["JSON AST", 61.24], ["Lean", 58.07], ["word problem", 52.2], ["Cayley-table checker", 51.88], ["canonical infix", 49.64], ["indented tree", 49.53], ["DOT graph", 48.36], ["integer slots", 26.8], ["confusable names", 19.69], ["prefix (Polish)", 16.91], ["postfix (RPN)", 8.53]];
+  var W=420,left=118,max=80,H=18*11.5+22; var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Certified recovery by representation"><g font-family="Montserrat, sans-serif" font-size="9" fill="#2a2233">';
+  [0,20,40,60,80].forEach(function(g){ var x=left+(W-left-40)*g/max; s+='<line x1="'+x.toFixed(1)+'" y1="12" x2="'+x.toFixed(1)+'" y2="'+(H-10)+'" stroke="#ddd6e4" stroke-width=".6"/><text x="'+x.toFixed(1)+'" y="9" text-anchor="middle" font-size="7.5" fill="#6b6275">'+g+'%</text>'; });
+  rows.forEach(function(r,i){ var y=14+i*11.5, bw=(W-left-40)*Math.min(r[1],max)/max; var col=r[1]>=60?'#7f5aa5':r[1]>=40?'#a98bc6':'#cdbce0'; if(r[0]==='confusable names'||r[0]==='postfix (RPN)') col='#c2410c';
+    s+='<text x="'+(left-6)+'" y="'+(y+7.5)+'" text-anchor="end" font-size="8">'+r[0]+'</text><rect x="'+left+'" y="'+y+'" width="'+bw.toFixed(1)+'" height="8.4" rx="2" fill="'+col+'"/><text x="'+(left+bw+4).toFixed(1)+'" y="'+(y+7.5)+'" font-size="7.8">'+r[1].toFixed(1)+'%</text>'; });
+  s+='</g></svg>'; document.getElementById('chart').innerHTML=s;
+})();
+</script>
+</body>
+</html>
