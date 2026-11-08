@@ -377,9 +377,9 @@ const VERDICTS_URL = "https://art-speed.app.n8n.cloud/webhook/verdicts";
 const DM = "https://api.datamuse.com/words";
 const MODEL_URL = "https://art-speed.app.n8n.cloud/webhook/model-play";
 const MODELS=[
-  {id:"openai/gpt-4",name:"GPT-4",org:"OpenAI",date:"May 2023"},{id:"openai/gpt-6.1-terra-pro",name:"GPT-6.1 Terra Pro",org:"OpenAI",date:"Oct 2026"},
-  {id:"anthropic/claude-opus-4.1",name:"Claude Opus 4.1",org:"Anthropic",date:"Aug 2025"},{id:"anthropic/claude-opus-5.5",name:"Claude Opus 5.5",org:"Anthropic",date:"Sep 2026"},
-  {id:"google/gemini-2.5-pro",name:"Gemini 2.5 Pro",org:"Google DeepMind",date:"Jun 2025"},{id:"google/gemini-4-argon",name:"Gemini 4 Argon",org:"Google DeepMind",date:"Oct 2026"}];
+  {id:"openai/gpt-4",name:"GPT-4",org:"OpenAI",date:"May 2023",lat:"~3 s"},{id:"openai/gpt-6.1-terra-pro",name:"GPT-6.1 Terra Pro",org:"OpenAI",date:"Oct 2026",lat:"~10 s"},
+  {id:"anthropic/claude-opus-4.1",name:"Claude Opus 4.1",org:"Anthropic",date:"Aug 2025",lat:"~30 s"},{id:"anthropic/claude-opus-5.5",name:"Claude Opus 5.5",org:"Anthropic",date:"Sep 2026",lat:"~10 s"},
+  {id:"google/gemini-2.5-pro",name:"Gemini 2.5 Pro",org:"Google DeepMind",date:"Jun 2025",lat:"~5 s"},{id:"google/gemini-4-argon",name:"Gemini 4 Argon",org:"Google DeepMind",date:"Oct 2026",lat:"~5 s"}];
 
 // ---------- the two specifications: five sentences each, assembled from verbatim fragments ----------
 const DOCS = {
@@ -563,7 +563,7 @@ function jgSummary(){
 // ---------- EDIT ----------
 const ED={pick:null,alt:null,defs:null,who:'you',model:null,why:'',author:''};
 function edStart(){ ED.pick=null; ED.alt=null; ED.why=''; ED.author=''; $('ed-preview').hidden=true; edRender(); edRenderModels(); }
-function edRenderModels(){ document.querySelectorAll('#view-edit .seg.who button').forEach(b=>b.classList.toggle('on',b.dataset.who===ED.who)); $('ed-model').hidden=ED.who!=='model'; $('ed-text').classList.toggle('readonly',ED.who==='model'); $('ed-models').innerHTML=MODELS.map(m=>`<button type="button" class="mbtn${ED.model===m.id?' on':''}" data-model="${m.id}"><b>${esc(m.name)}</b><span>${esc(m.org)} · ${esc(m.date)}</span></button>`).join(''); $('ed-models').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ ED.model=b.dataset.model; edRenderModels(); })); $('ed-ask').disabled=!ED.model; }
+function edRenderModels(){ document.querySelectorAll('#view-edit .seg.who button').forEach(b=>b.classList.toggle('on',b.dataset.who===ED.who)); $('ed-model').hidden=ED.who!=='model'; $('ed-text').classList.toggle('readonly',ED.who==='model'); $('ed-models').innerHTML=MODELS.map(m=>`<button type="button" class="mbtn${ED.model===m.id?' on':''}" data-model="${m.id}"><b>${esc(m.name)}</b><span>${esc(m.org)} · ${esc(m.date)} · ${esc(m.lat)}</span></button>`).join(''); $('ed-models').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ ED.model=b.dataset.model; edRenderModels(); })); $('ed-ask').disabled=!ED.model; }
 function promptText(doc){ const T=currentTokens(doc); const text=T.map((t,i)=>(i+1)+'. '+sentenceText(t)).join('\n'); return `Below is a five-sentence specification of how an AI model should behave, assembled from quotations of a published document. Visitors to a research poster are changing it one word at a time.\n\nChoose one word in the text that you would change, and the single word you would put in its place. You decide what counts as an improvement. Then explain your choice in one or two sentences.\n\nTEXT:\n${text}\n\nRules: change exactly one word. The replacement is one English word made of letters only. Do not change names, numbers, punctuation or quotation marks.\n\nAnswer with exactly these four lines and nothing else:\nSENTENCE: <number 1-5>\nWORD: <the word you replace, exactly as it appears>\nREPLACEMENT: <one word>\nWHY: <one or two sentences>`; }
 function parseModelAnswer(raw,doc){
   const T=currentTokens(doc); const txt=String(raw||'').replace(/\*\*/g,'');
@@ -584,12 +584,14 @@ async function edApplyParsed(parsed,author,modelId){
   edChoose({word:parsed.to,pos:toDef?toDef.pos:'',def:toDef?toDef.def:'No dictionary entry.'},fromDef);
   $('ed-preview-title').textContent=author?`${author}'s change`:'Your change'; const w=$('ed-why'); w.hidden=!parsed.why; w.textContent=parsed.why?`“${parsed.why}”`:'';
 }
+async function askOnce(body,ms){ const ac=new AbortController(); const t=setTimeout(()=>ac.abort(),ms); try{ const r=await fetch(MODEL_URL,{method:'POST',mode:'cors',headers:{'Content-Type':'text/plain'},body,signal:ac.signal}); const txt=await r.text(); try{ return JSON.parse(txt); }catch(e){ return null; } }catch(e){ return null; } finally{ clearTimeout(t); } }
 async function edAsk(){
-  const m=MODELS.find(x=>x.id===ED.model); if(!m) return; const btn=$('ed-ask'); btn.disabled=true; $('ed-ask-help').textContent=`Asking ${m.name}…`;
-  const T=currentTokens(DOC); const text=T.map((t,i)=>(i+1)+'. '+sentenceText(t)).join('\n');
-  let j=null; try{ const r=await fetch(MODEL_URL,{method:'POST',mode:'cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({doc:DOC,model:m.id,text,handle:store.get('handle','')})}); j=await r.json().catch(()=>null); }catch(e){ j=null; }
-  btn.disabled=false;
-  if(!j||!j.ok){ $('ed-ask-help').textContent=(j&&j.error?`${m.name} did not answer: ${j.error}. `:'The model route did not answer. ')+'You can run the prompt yourself below and paste the answer.'; return; }
+  const m=MODELS.find(x=>x.id===ED.model); if(!m) return; const btn=$('ed-ask'); btn.disabled=true;
+  const t0=Date.now(); const tick=setInterval(()=>{ $('ed-ask-help').textContent=`Asking ${m.name}… ${Math.round((Date.now()-t0)/1000)} s. It usually takes ${m.lat.replace('~','about ')}; the newer models think before they answer.`; },500); $('ed-ask-help').textContent=`Asking ${m.name}… it usually takes ${m.lat.replace('~','about ')}.`;
+  const T=currentTokens(DOC); const text=T.map((t,i)=>(i+1)+'. '+sentenceText(t)).join('\n'); const body=JSON.stringify({doc:DOC,model:m.id,text,handle:store.get('handle','')});
+  let j=await askOnce(body,75000); if(!j){ $('ed-ask-help').textContent=`No answer yet, asking ${m.name} once more…`; j=await askOnce(body,75000); }
+  clearInterval(tick); btn.disabled=false;
+  if(!j||!j.ok){ $('ed-ask-help').textContent=(j&&j.error?`${m.name} did not answer: ${j.error}. `:`${m.name} did not answer in time. `)+'Try again, pick another model, or run the prompt yourself below and paste the answer.'; return; }
   const parsed=parseModelAnswer(j.raw,DOC);
   if(parsed.error){ $('ed-ask-help').innerHTML=`${esc(m.name)} answered, but ${esc(parsed.error)}<br><span class="mono">${esc(j.raw).slice(0,400)}</span>`; return; }
   $('ed-ask-help').textContent=`${m.name} chose a word.`; edApplyParsed(parsed,m.name,m.id);
