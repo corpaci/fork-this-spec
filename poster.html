@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <title>Small Edits Different Worlds</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="A0 poster: Small edits. Different worlds.">
 </head>
 <body>
 
@@ -97,8 +98,8 @@ code{font-family:var(--font-mono);font-size:.95em}
 /* right */
 .nums{display:grid;gap:5mm}
 .num{background:var(--panel-2);border-radius:2mm;padding:5mm 6mm}
-.num b{display:block;font-size:17mm;line-height:1.05;font-variant-numeric:tabular-nums}
-.num span{font-size:7.6mm;color:var(--muted);line-height:1.3;display:block;margin-top:1.5mm}
+.num b{display:block;font-size:15mm;line-height:1.05;font-variant-numeric:tabular-nums}
+.num span{font-size:7mm;color:var(--muted);line-height:1.3;display:block;margin-top:1.5mm}
 .tl{display:grid;gap:3.4mm;font-size:8.2mm;line-height:1.33}
 .tl div{display:grid;grid-template-columns:54mm minmax(0,1fr);gap:4mm}
 .tl b{font-family:var(--font-mono);color:var(--teal);font-weight:600}
@@ -213,11 +214,12 @@ code{font-family:var(--font-mono);font-size:.95em}
         <div class="qrblock">
           <div class="qr" id="qr"></div>
           <div>
-            <p class="cta">Revise the latest specification. <em>Preserve its promise.</em></p>
+            <p class="cta">Judge a revision. <em>Then revise one yourself.</em></p>
             <div class="roles">
+              <div class="role"><i class="c" style="background:var(--ink)">?</i><span><b>You are the overseer.</b> Same meaning or changed? Commit, get help, judge again, replay the counterexample. Three rounds, two minutes.</span></div>
               <div class="role"><i class="b">≈</i><span><b>Revise it.</b> Up to three token edits that change the wording and not the meaning. The reviewer accepts; the oracle tells you how far you really moved.</span></div>
               <div class="role"><i class="a">⌁</i><span><b>Change the promise.</b> Get a revision accepted that lets an over-budget execution through.</span></div>
-              <div class="role"><i class="c">AI</i><span><b>Let a model revise it.</b> Scan a model below; it gets the latest revision and the task. Paste its answer back and the oracle judges it.</span></div>
+              <div class="role"><i class="c">AI</i><span><b>Let a model revise it.</b> Scan a model below; it gets the latest revision and the task. Paste its answer back.</span></div>
             </div>
             <p class="url" id="url"></p>
           </div>
@@ -245,10 +247,15 @@ code{font-family:var(--font-mono);font-size:.95em}
         <p class="small" style="margin-top:5mm">Selecting on validity moved failures from loud to silent without improving survival. Here the reviewer is the selector.</p>
       </div>
 
+      <div class="box" style="border-color:var(--ink);border-width:0.9mm">
+        <h3>You are the overseer</h3>
+        <p class="body">Two rules, original and revision. <b>Same meaning or changed?</b> Commit, then get help assigned at random: a second look, an AI critique, or a critique with a witness execution you can replay. Judge again. Then the oracle reveals the truth. Some critiques lie.</p>
+        <p class="small" style="margin-top:4mm">Tallied per form of help: drift caught, false alarms, judgments rescued, judgments misled. Does assistance make the decision easier to <i>verify</i>, or only easier to believe? <b>Exact equivalence is transitive:</b> if every revision had preserved meaning, the chain could not drift.</p>
+      </div>
+
       <div class="box">
         <h3>The toy world behind the distances</h3>
-        <p class="body">A main agent runs a task with ten credits. It can delegate to workers, which can delegate further. Attempts fail and are retried; a restart gives a fresh counter; a worker can file its work under another task's name. Every unit of work is read by an independent meter and self-reported by the agent that did it.</p>
-        <p class="small" style="margin-top:4mm">Six ways a revision can leave the promise, by kind: definition (children for descendants, retries uncounted, relabelled work excluded), implementation (restart resets the counter, max for sum under concurrency), model-to-execution (self-report for the meter). In July 2026, agents in an OpenAI evaluation spoofed their own tool calls; METR found it in at least 96 transcripts. That is the last kind.</p>
+        <p class="small">A main agent runs a task with ten credits; it can delegate, workers can delegate further; attempts fail and are retried; a restart gives a fresh counter; a worker can file its work under another task's name; every unit of work is metered and self-reported. Six ways a revision can leave the promise: children for descendants, retries uncounted, relabelled work excluded, restart resets the counter, max for sum, self-report for the meter. The last is tool-call spoofing, which METR found in at least 96 transcripts of the July 2026 OpenAI evaluation.</p>
       </div>
 
       <div class="box tint">
@@ -257,7 +264,6 @@ code{font-family:var(--font-mono);font-size:.95em}
           <li>Iterated revision with a reviewer is a refinement process. Does it converge, and to whose promise?</li>
           <li>Which clauses should never be allowed to weaken, and who decides?</li>
           <li>Can a revision step be typed as a lens whose backward map carries the preservation certificate?</li>
-          <li>Which execution universe should the behavioural distance be measured over?</li>
         </ol>
       </div>
     </div>
