@@ -22,5 +22,53 @@
   "to": "obedient",
   "author": "anonymous",
   "ts": "2026-11-08T11:07:13"
+ },
+ {
+  "kind": "word",
+  "id": "w-o-mw7rlxuo-02we",
+  "parent": "v0",
+  "doc": "openai",
+  "s": 0,
+  "i": 17,
+  "from": "useful",
+  "to": "helpful",
+  "author": "anonymous",
+  "ts": "2026-11-08T11:44:41"
+ },
+ {
+  "kind": "word",
+  "id": "w-o-mw7v2okx-68vt",
+  "parent": "w-o-mw7rlxuo-02we",
+  "doc": "openai",
+  "s": 2,
+  "i": 4,
+  "from": "different",
+  "to": "diverse",
+  "author": "anonymous",
+  "ts": "2026-11-08T13:21:41"
+ },
+ {
+  "kind": "word",
+  "id": "w-a-mw7v3a1h-iqtm",
+  "parent": "w-a-mw7q9rfm-bcfa",
+  "doc": "anthropic",
+  "s": 1,
+  "i": 8,
+  "from": "safe",
+  "to": "harmless",
+  "author": "anonymous",
+  "ts": "2026-11-08T13:22:09"
+ },
+ {
+  "kind": "word",
+  "id": "w-a-mw7w7ete-1ilv",
+  "parent": "w-a-mw7v3a1h-iqtm",
+  "doc": "anthropic",
+  "s": 0,
+  "i": 11,
+  "from": "remarkably",
+  "to": "signally",
+  "author": "anonymous",
+  "ts": "2026-11-08T13:53:51"
  }
 ]
