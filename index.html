@@ -561,9 +561,10 @@ function jgSummary(){
 }
 
 // ---------- EDIT ----------
-const ED={pick:null,alt:null,defs:null,who:'you',model:null,why:'',author:''};
-function edStart(){ ED.pick=null; ED.alt=null; ED.why=''; ED.author=''; $('ed-preview').hidden=true; edRender(); edRenderModels(); }
-function edRenderModels(){ document.querySelectorAll('#view-edit .seg.who button').forEach(b=>b.classList.toggle('on',b.dataset.who===ED.who)); $('ed-model').hidden=ED.who!=='model'; $('ed-text').classList.toggle('readonly',ED.who==='model'); $('ed-models').innerHTML=MODELS.map(m=>`<button type="button" class="mbtn${ED.model===m.id?' on':''}" data-model="${m.id}"><b>${esc(m.name)}</b><span>${esc(m.org)} · ${esc(m.date)} · ${esc(m.lat)}</span></button>`).join(''); $('ed-models').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ ED.model=b.dataset.model; edRenderModels(); })); $('ed-ask').disabled=!ED.model; }
+const ED={pick:null,alt:null,defs:null,who:'you',model:null,why:'',author:'',asking:null,seq:0,tick:null};
+function edStart(){ edCancelAsk(''); ED.pick=null; ED.alt=null; ED.why=''; ED.author=''; $('ed-preview').hidden=true; edRender(); edRenderModels(); }
+function edRenderModels(){ document.querySelectorAll('#view-edit .seg.who button').forEach(b=>b.classList.toggle('on',b.dataset.who===ED.who)); $('ed-model').hidden=ED.who!=='model'; $('ed-text').classList.toggle('readonly',ED.who==='model'); $('ed-models').innerHTML=MODELS.map(m=>`<button type="button" class="mbtn${ED.model===m.id?' on':''}" data-model="${m.id}"><b>${esc(m.name)}</b><span>${esc(m.org)} · ${esc(m.date)} · ${esc(m.lat)}</span></button>`).join(''); $('ed-models').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ const switching=ED.asking&&ED.model!==b.dataset.model; ED.model=b.dataset.model; if(switching) edCancelAsk('Cancelled. Press Ask it for '+(MODELS.find(x=>x.id===ED.model)||{}).name+'.'); edRenderModels(); })); $('ed-ask').disabled=!ED.model||!!ED.asking; }
+function edCancelAsk(msg){ if(ED.asking){ try{ ED.asking.abort(); }catch(e){} } ED.asking=null; ED.seq++; clearInterval(ED.tick); ED.tick=null; $('ed-ask').disabled=!ED.model; if(msg) $('ed-ask-help').textContent=msg; }
 function promptText(doc){ const T=currentTokens(doc); const text=T.map((t,i)=>(i+1)+'. '+sentenceText(t)).join('\n'); return `Below is a five-sentence specification of how an AI model should behave, assembled from quotations of a published document. Visitors to a research poster are changing it one word at a time.\n\nChoose one word in the text that you would change, and the single word you would put in its place. You decide what counts as an improvement. Then explain your choice in one or two sentences.\n\nTEXT:\n${text}\n\nRules: change exactly one word. The replacement is one English word made of letters only. Do not change names, numbers, punctuation or quotation marks.\n\nAnswer with exactly these four lines and nothing else:\nSENTENCE: <number 1-5>\nWORD: <the word you replace, exactly as it appears>\nREPLACEMENT: <one word>\nWHY: <one or two sentences>`; }
 function parseModelAnswer(raw,doc){
   const T=currentTokens(doc); const txt=String(raw||'').replace(/\*\*/g,'');
@@ -584,13 +585,15 @@ async function edApplyParsed(parsed,author,modelId){
   edChoose({word:parsed.to,pos:toDef?toDef.pos:'',def:toDef?toDef.def:'No dictionary entry.'},fromDef);
   $('ed-preview-title').textContent=author?`${author}'s change`:'Your change'; const w=$('ed-why'); w.hidden=!parsed.why; w.textContent=parsed.why?`“${parsed.why}”`:'';
 }
-async function askOnce(body,ms){ const ac=new AbortController(); const t=setTimeout(()=>ac.abort(),ms); try{ const r=await fetch(MODEL_URL,{method:'POST',mode:'cors',headers:{'Content-Type':'text/plain'},body,signal:ac.signal}); const txt=await r.text(); try{ return JSON.parse(txt); }catch(e){ return null; } }catch(e){ return null; } finally{ clearTimeout(t); } }
+async function askOnce(body,ms,ac){ const t=setTimeout(()=>ac.abort(),ms); try{ const r=await fetch(MODEL_URL,{method:'POST',mode:'cors',headers:{'Content-Type':'text/plain'},body,signal:ac.signal}); const txt=await r.text(); try{ return JSON.parse(txt); }catch(e){ return null; } }catch(e){ return ac.signal.aborted&&ED.asking!==ac?'cancelled':null; } finally{ clearTimeout(t); } }
 async function edAsk(){
-  const m=MODELS.find(x=>x.id===ED.model); if(!m) return; const btn=$('ed-ask'); btn.disabled=true;
-  const t0=Date.now(); const tick=setInterval(()=>{ $('ed-ask-help').textContent=`Asking ${m.name}… ${Math.round((Date.now()-t0)/1000)} s. It usually takes ${m.lat.replace('~','about ')}; the newer models think before they answer.`; },500); $('ed-ask-help').textContent=`Asking ${m.name}… it usually takes ${m.lat.replace('~','about ')}.`;
+  const m=MODELS.find(x=>x.id===ED.model); if(!m||ED.asking) return; const btn=$('ed-ask'); btn.disabled=true;
+  const seq=++ED.seq; const ac=new AbortController(); ED.asking=ac;
+  const t0=Date.now(); clearInterval(ED.tick); ED.tick=setInterval(()=>{ if(ED.seq!==seq) return; $('ed-ask-help').textContent=`Asking ${m.name}… ${Math.round((Date.now()-t0)/1000)} s. It usually takes ${m.lat.replace('~','about ')}; the newer models think before they answer. Pick another model to cancel.`; },500); $('ed-ask-help').textContent=`Asking ${m.name}… it usually takes ${m.lat.replace('~','about ')}.`;
   const T=currentTokens(DOC); const text=T.map((t,i)=>(i+1)+'. '+sentenceText(t)).join('\n'); const body=JSON.stringify({doc:DOC,model:m.id,text,handle:store.get('handle','')});
-  let j=await askOnce(body,75000); if(!j){ $('ed-ask-help').textContent=`No answer yet, asking ${m.name} once more…`; j=await askOnce(body,75000); }
-  clearInterval(tick); btn.disabled=false;
+  let j=await askOnce(body,75000,ac); if(j===null&&ED.seq===seq){ $('ed-ask-help').textContent=`No answer yet, asking ${m.name} once more…`; j=await askOnce(body,75000,ac); }
+  if(ED.seq!==seq||j==='cancelled') return; // a newer ask or a cancel took over
+  clearInterval(ED.tick); ED.tick=null; ED.asking=null; btn.disabled=false;
   if(!j||!j.ok){ $('ed-ask-help').textContent=(j&&j.error?`${m.name} did not answer: ${j.error}. `:`${m.name} did not answer in time. `)+'Try again, pick another model, or run the prompt yourself below and paste the answer.'; return; }
   const parsed=parseModelAnswer(j.raw,DOC);
   if(parsed.error){ $('ed-ask-help').innerHTML=`${esc(m.name)} answered, but ${esc(parsed.error)}<br><span class="mono">${esc(j.raw).slice(0,400)}</span>`; return; }
