@@ -236,6 +236,15 @@ a{color:var(--accent)}
 .node .tally{margin-top:6px}
 .node{display:block}
 @media (max-width:420px){.defgrid{grid-template-columns:1fr}}
+.seg.who{margin-left:auto}
+.models{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+.mbtn{display:block;text-align:left;border-radius:14px;padding:10px 12px;background:var(--surface);min-height:0}
+.mbtn b{display:block;font-size:15px;font-weight:600} .mbtn span{display:block;font-size:12px;color:var(--muted)}
+.mbtn.on{background:var(--lavender)}
+.why{font-size:14.5px;color:var(--fg);margin:8px 0 0;padding-left:10px;border-left:3px solid var(--lavender)}
+.prose.edit.readonly .w.ed{border-bottom-color:transparent;cursor:default}
+.mono{font-family:var(--font-mono);font-size:12px;white-space:pre-wrap}
+.preview .def{background:var(--surface)}
 </style>
 
 <div class="app" id="app">
@@ -259,7 +268,7 @@ a{color:var(--accent)}
     </div>
     <div class="roles">
       <button class="role wide" data-go="judge"><div class="ic j">?</div><b>Judge a change</b><span>One word moved. Same meaning, or changed? Four quick rounds. Start here.</span></button>
-      <button class="role" data-go="edit"><div class="ic b">≈</div><b>Change a word</b><span>Tap a word, see what it means, pick another.</span></button>
+      <button class="role" data-go="edit"><div class="ic b">≈</div><b>Change a word</b><span>You, or a model. Tap a word, see what it means, pick another.</span></button>
       <button class="role" data-go="chain"><div class="ic a">⌁</div><b>The drift so far</b><span>Every change and what the crowd made of it.</span></button>
     </div>
     <div class="stats">
@@ -267,12 +276,11 @@ a{color:var(--accent)}
       <div class="stat"><b id="st-edits">–</b><span>words changed</span></div>
       <div class="stat"><b id="st-judg">–</b><span>judgments</span></div>
     </div>
-    <div class="row" style="margin-top:16px;justify-content:center"><button class="ghost" data-go="demo">Watch an example round</button><button class="ghost" data-go="about">The originals</button><a class="btn ghost" href="compute/">The compute-budget game</a></div>
+    <div class="row" style="margin-top:16px;justify-content:center"><button class="ghost" id="how-btn">How it works</button></div>
   </section>
 
   <!-- JUDGE -->
   <section id="view-judge" hidden>
-    <div class="banner" id="jg-banner" hidden><span class="dot"></span><span id="jg-banner-text">Example round, scripted. Not a real visitor.</span><button class="ghost" id="jg-banner-btn" type="button">Skip to the end</button></div>
     <p class="date" id="jg-puzzle"></p>
     <div class="hrow"><h2 id="jg-title">Same meaning, or changed?</h2><button class="info" data-info="judge" aria-label="How judging works">i</button></div>
     <div class="progress" id="jg-progress"></div>
@@ -299,12 +307,26 @@ a{color:var(--accent)}
     <p class="date" id="ed-line"></p>
     <div class="hrow"><h2>Change one word.</h2><button class="info" data-info="edit" aria-label="How editing works">i</button></div>
     <p class="small">Tap a word to see what it means and what could replace it.</p>
-    <div class="seg" role="tablist" aria-label="Specification"><button role="tab" data-doc="anthropic" class="on">Anthropic</button><button role="tab" data-doc="openai">OpenAI</button></div>
+    <div class="row" style="gap:8px"><div class="seg" role="tablist" aria-label="Specification"><button role="tab" data-doc="anthropic" class="on">Anthropic</button><button role="tab" data-doc="openai">OpenAI</button></div><div class="seg who" role="tablist" aria-label="Who changes it"><button role="tab" data-who="you" class="on">You</button><button role="tab" data-who="model">A model</button></div></div>
     <div class="prose edit" id="ed-text"></div>
+    <div id="ed-model" class="preview" hidden>
+      <h3>Which model</h3>
+      <p class="small">The oldest and the newest flagship each company still serves. It gets the current text and the same task you have: change one word, say why.</p>
+      <div class="models" id="ed-models"></div>
+      <div class="actions"><button id="ed-ask" class="primary block" disabled>Ask it</button></div>
+      <p class="small" id="ed-ask-help" style="margin-top:6px"></p>
+      <details style="margin-top:8px"><summary>Or run the prompt yourself and paste the answer</summary>
+        <div class="actions" style="margin-top:8px"><button id="ed-copy-prompt" class="ghost">Copy the prompt</button></div>
+        <textarea id="ed-paste" spellcheck="false" placeholder="SENTENCE: 5&#10;WORD: flourishing&#10;REPLACEMENT: thriving&#10;WHY: …" style="min-height:110px;margin-top:8px"></textarea>
+        <div class="actions"><button id="ed-parse" class="ghost">Use this answer</button></div>
+        <p class="small" id="ed-parse-help"></p>
+      </details>
+    </div>
     <div id="ed-preview" class="preview" hidden>
-      <h3>Your change</h3>
+      <h3 id="ed-preview-title">Your change</h3>
       <div class="prose one" id="ed-after"></div>
       <div class="defs" id="ed-defs"></div>
+      <p id="ed-why" class="why" hidden></p>
       <div class="row" style="margin-top:10px"><input id="ed-handle" placeholder="Your name or handle (optional)" style="flex:1 1 160px"></div>
       <div class="actions"><button id="ed-undo" class="ghost">Pick another</button><button id="ed-add" class="primary">Add it to the chain</button></div>
       <p class="small" id="ed-help" style="margin-top:6px">It becomes the current text for everyone, and the next thing other visitors judge.</p>
@@ -352,6 +374,11 @@ const JUDGE_URL = "https://art-speed.app.n8n.cloud/webhook/judge";
 const SUBMIT_URL = "https://art-speed.app.n8n.cloud/webhook/submit";
 const VERDICTS_URL = "https://art-speed.app.n8n.cloud/webhook/verdicts";
 const DM = "https://api.datamuse.com/words";
+const MODEL_URL = "https://art-speed.app.n8n.cloud/webhook/model-play";
+const MODELS=[
+  {id:"openai/gpt-4",name:"GPT-4",org:"OpenAI",date:"May 2023"},{id:"openai/gpt-6.1-terra-pro",name:"GPT-6.1 Terra Pro",org:"OpenAI",date:"Oct 2026"},
+  {id:"anthropic/claude-opus-4.1",name:"Claude Opus 4.1",org:"Anthropic",date:"Aug 2025"},{id:"anthropic/claude-opus-5.5",name:"Claude Opus 5.5",org:"Anthropic",date:"Sep 2026"},
+  {id:"google/gemini-2.5-pro",name:"Gemini 2.5 Pro",org:"Google DeepMind",date:"Jun 2025"},{id:"google/gemini-4-argon",name:"Gemini 4 Argon",org:"Google DeepMind",date:"Oct 2026"}];
 
 // ---------- the two specifications: five sentences each, assembled from verbatim fragments ----------
 const DOCS = {
@@ -454,7 +481,7 @@ const ROUNDS=4;
 function poolAll(){ const seedIds=new Set(SEEDS.map(s=>s.id)); return [...SEEDS, ...NODES.filter(n=>!seedIds.has(n.id))]; }
 function puzzleFor(item){ const before=currentTokens(item.doc,item.id); const after=before.map(t=>t.slice()); if(after[item.s]&&after[item.s][item.i]!==undefined) after[item.s][item.i]=matchCase(before[item.s][item.i],item.to); return {item,before,after,from:before[item.s]?before[item.s][item.i]:item.from,to:after[item.s]?after[item.s][item.i]:item.to}; }
 function jgPick(){ const done=new Set(store.get('jgDone',[])); let pool=poolAll().filter(p=>!done.has(p.id)&&p.author!==(store.get('handle','')||'\u0000')); if(pool.length<ROUNDS) pool=poolAll(); const rnd=mulberry32(hashStr(VID+Date.now())); const scored=pool.map(p=>({p,k:(TALLY[p.id]?TALLY[p.id].n:0)+rnd()*0.9})); scored.sort((a,b)=>a.k-b.k); const picks=[]; const docsSeen={}; for(const x of scored){ if(picks.length>=ROUNDS) break; picks.push(x.p); } return picks; }
-function jgStart(){ demoStop(); JG.pool=jgPick(); JG.i=0; JG.round=0; JG.results=[]; jgRender(); }
+function jgStart(){ JG.pool=jgPick(); JG.i=0; JG.round=0; JG.results=[]; jgRender(); }
 function jgRender(){
   const item=JG.pool[JG.round]; const pz=puzzleFor(item); JG.cur=pz; JG.first=null; JG.firstConf=null; JG.second=null; JG.secondConf=null; JG.defs=null; JG.t0=Date.now();
   $('jg-puzzle').textContent=`Round ${JG.round+1} of ${ROUNDS} · ${DOCS[item.doc].short} · sentence ${item.s+1}`;
@@ -482,7 +509,7 @@ function jgReveal(){
   JG.results[JG.round]={id,first:JG.first,second:JG.second};
   const word=a=>a==='same'?'Same':a==='changed'?'Changed':'Unresolved';
   let html=`<p class="outcome">${moved?`${word(JG.first)}, then ${word(JG.second)}.`:`${word(JG.second)}, both times.`}</p>`;
-  html+=`<p>${esc(pz.from)} → ${esc(pz.to)}${pz.item.seed?'':` · changed by ${esc(pz.item.author||'a visitor')}`}.</p>`+tallyHtml(id,JG.second);
+  html+=`<p>${esc(pz.from)} → ${esc(pz.to)}${pz.item.seed?'':` · changed by ${esc(pz.item.author||'a visitor')}${pz.item.askedBy?`, asked by ${esc(pz.item.askedBy)}`:''}`}.</p>${pz.item.why?`<p class="why">“${esc(pz.item.why)}”</p>`:''}`+tallyHtml(id,JG.second);
   html+=`<p class="small" style="margin-top:8px">No oracle decides this one. The record is the disagreement.</p>`;
   html+=`<div class="actions"><button id="jg-next" class="primary">${JG.round<ROUNDS-1?'Next':'Your result'}</button></div>`;
   $('jg-reveal').innerHTML=html; $('jg-reveal').hidden=false; $('jg-step2').hidden=true;
@@ -504,40 +531,40 @@ function jgSummary(){
   renderHome();
 }
 
-// ---------- example round (scripted) ----------
-const DEMO={on:false,timers:[]};
-function demoAt(ms,fn){ DEMO.timers.push(setTimeout(fn,ms)); }
-function demoStop(){ DEMO.timers.forEach(clearTimeout); DEMO.timers=[]; DEMO.on=false; $('view-judge').classList.remove('demo'); $('jg-banner').hidden=true; }
-function demoPick(sel,key,val){ document.querySelectorAll(sel+' button').forEach(b=>{ const on=b.dataset[key]===val; b.classList.toggle('picked',on); b.classList.toggle('cursor',on); }); }
-async function jgDemo(){
-  demoStop(); DEMO.on=true; $('view-judge').classList.add('demo');
-  const item=SEEDS.find(s=>s.from.toLowerCase()==='flourishing'&&s.to==='thriving')||SEEDS[0]; const pz=puzzleFor(item); JG.cur=pz; JG.round=0; JG.results=[];
-  $('jg-puzzle').textContent=`Example round · ${DOCS[item.doc].short} · sentence ${item.s+1}`; $('jg-title').textContent='Same meaning, or changed?';
-  jgPaint(pz); $('jg-progress').innerHTML=[0,1,2,3].map(i=>`<i class="${i===0?'cur':''}"></i>`).join('');
-  const banner=$('jg-banner'); banner.hidden=false; banner.classList.remove('done'); $('jg-banner-text').textContent='Example round, scripted. Not a real visitor.'; $('jg-banner-btn').textContent='Skip to the end';
-  let defs=null; Promise.all([defOf(pz.from),defOf(pz.to)]).then(d=>defs=d).catch(()=>{});
-  const steps=[
-    [1500,()=>{ demoPick('#jg-step1 .choice','ans','same'); $('jg-conf1').hidden=false; }],
-    [2400,()=>{ demoPick('#jg-conf1','conf','fairly'); }],
-    [3000,()=>{ $('jg-step1').hidden=true; $('jg-step2').hidden=true; $('jg-assist').innerHTML=`<h4>What the dictionary says</h4>`+defsHtml(pz.from,pz.to,defs||[{pos:'adjective',def:'Growing, thriving, prospering.'},{pos:'adjective',def:'That thrives; successful; flourishing or prospering.'}]); $('jg-step2').hidden=false; $('jg-conf2').hidden=true; }],
-    [7200,()=>{ demoPick('#jg-choice2','ans','unsure'); $('jg-conf2').hidden=false; }],
-    [7900,()=>{ demoPick('#jg-conf2','conf','fairly'); }],
-    [8400,()=>demoReveal(pz)],
-  ];
-  steps.forEach(([ms,fn])=>demoAt(ms,fn));
-  $('jg-banner-btn').onclick=()=>{ if(banner.classList.contains('done')){ demoStop(); jgStart(); } else { DEMO.timers.forEach(clearTimeout); DEMO.timers=[]; steps.forEach(([,fn])=>fn()); } };
-}
-function demoReveal(pz){
-  $('jg-step2').hidden=true;
-  $('jg-reveal').innerHTML=`<p class="outcome">Same, then Unresolved.</p><p>${esc(pz.from)} → ${esc(pz.to)}. The dictionary lists each as a synonym of the other, and the definitions still differ in what they emphasise: growth versus success.</p>${tallyHtml(pz.item.id)}<p class="small" style="margin-top:8px">No oracle decides this one. Your answer joins the tally; the disagreement is the record.</p><div class="actions"><button id="jg-next" class="primary">Judge one yourself</button></div>`;
-  $('jg-reveal').hidden=false;
-  const banner=$('jg-banner'); banner.classList.add('done'); $('jg-banner-text').textContent='That was the example.'; $('jg-banner-btn').textContent='Judge one yourself';
-  $('jg-next').addEventListener('click',()=>{ demoStop(); jgStart(); });
-}
-
 // ---------- EDIT ----------
-const ED={pick:null,alt:null,defs:null};
-function edStart(){ ED.pick=null; ED.alt=null; $('ed-preview').hidden=true; edRender(); }
+const ED={pick:null,alt:null,defs:null,who:'you',model:null,why:'',author:''};
+function edStart(){ ED.pick=null; ED.alt=null; ED.why=''; ED.author=''; $('ed-preview').hidden=true; edRender(); edRenderModels(); }
+function edRenderModels(){ document.querySelectorAll('#view-edit .seg.who button').forEach(b=>b.classList.toggle('on',b.dataset.who===ED.who)); $('ed-model').hidden=ED.who!=='model'; $('ed-text').classList.toggle('readonly',ED.who==='model'); $('ed-models').innerHTML=MODELS.map(m=>`<button type="button" class="mbtn${ED.model===m.id?' on':''}" data-model="${m.id}"><b>${esc(m.name)}</b><span>${esc(m.org)} · ${esc(m.date)}</span></button>`).join(''); $('ed-models').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ ED.model=b.dataset.model; edRenderModels(); })); $('ed-ask').disabled=!ED.model; }
+function promptText(doc){ const T=currentTokens(doc); const text=T.map((t,i)=>(i+1)+'. '+sentenceText(t)).join('\n'); return `Below is a five-sentence specification of how an AI model should behave, assembled from quotations of a published document. Visitors to a research poster are changing it one word at a time.\n\nChoose one word in the text that you would change, and the single word you would put in its place. You decide what counts as an improvement. Then explain your choice in one or two sentences.\n\nTEXT:\n${text}\n\nRules: change exactly one word. The replacement is one English word made of letters only. Do not change names, numbers, punctuation or quotation marks.\n\nAnswer with exactly these four lines and nothing else:\nSENTENCE: <number 1-5>\nWORD: <the word you replace, exactly as it appears>\nREPLACEMENT: <one word>\nWHY: <one or two sentences>`; }
+function parseModelAnswer(raw,doc){
+  const T=currentTokens(doc); const txt=String(raw||'').replace(/\*\*/g,'');
+  const mS=/sentence\s*[:#.\-]?\s*(\d)/i.exec(txt); const mW=/\bword\s*[:\-]\s*["“”']?([A-Za-z][A-Za-z’'-]*)/i.exec(txt); const mR=/replacement\s*[:\-]\s*["“”']?([A-Za-z]+)/i.exec(txt); const mY=/why\s*[:\-]\s*([\s\S]+?)\s*$/i.exec(txt);
+  let word, to;
+  if(mW&&mR){ word=mW[1]; to=mR[1].toLowerCase(); }
+  else { const mP=/["“‘']([A-Za-z][A-Za-z’'-]*)["”’']\s*(?:to|with|for|by|→|->|=>)\s*["“‘']?([A-Za-z]+)["”’']?/i.exec(txt) || /\b(?:change|replace|swap)\s+["“]?([A-Za-z][A-Za-z’'-]*)["”]?\s+(?:to|with|for)\s+["“]?([A-Za-z]+)/i.exec(txt); if(!mP) return {error:'Could not find the word and its replacement. Expected lines WORD: … and REPLACEMENT: …'}; word=mP[1]; to=mP[2].toLowerCase(); } if(!WORD_RE.test(to)) return {error:'The replacement must be a single word of letters.'};
+  let cands=[]; T.forEach((toks,si)=>toks.forEach((t,i)=>{ if(t.toLowerCase()===word.toLowerCase()&&editable(t)) cands.push({s:si,i}); }));
+  if(!cands.length) return {error:`"${word}" is not a changeable word in the current text.`};
+  let pick=cands[0]; if(mS){ const sn=Number(mS[1])-1; const inS=cands.find(c=>c.s===sn); if(inS) pick=inS; }
+  const from=T[pick.s][pick.i]; if(from.toLowerCase()===to) return {error:'The replacement is the same word.'};
+  const why=mY?mY[1].replace(/\s+/g,' ').trim().slice(0,400):'';
+  return {s:pick.s,i:pick.i,from,to:matchCase(from,to),why};
+}
+async function edApplyParsed(parsed,author,modelId){
+  ED.pick={s:parsed.s,i:parsed.i,word:parsed.from}; ED.why=parsed.why; ED.author=author; ED.model=modelId||ED.model;
+  let fromDef=null,toDef=null; try{ [fromDef,toDef]=await Promise.all([defOf(parsed.from),defOf(parsed.to)]); }catch(e){}
+  edChoose({word:parsed.to,pos:toDef?toDef.pos:'',def:toDef?toDef.def:'No dictionary entry.'},fromDef);
+  $('ed-preview-title').textContent=author?`${author}'s change`:'Your change'; const w=$('ed-why'); w.hidden=!parsed.why; w.textContent=parsed.why?`“${parsed.why}”`:'';
+}
+async function edAsk(){
+  const m=MODELS.find(x=>x.id===ED.model); if(!m) return; const btn=$('ed-ask'); btn.disabled=true; $('ed-ask-help').textContent=`Asking ${m.name}…`;
+  const T=currentTokens(DOC); const text=T.map((t,i)=>(i+1)+'. '+sentenceText(t)).join('\n');
+  let j=null; try{ const r=await fetch(MODEL_URL,{method:'POST',mode:'cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({doc:DOC,model:m.id,text,handle:store.get('handle','')})}); j=await r.json().catch(()=>null); }catch(e){ j=null; }
+  btn.disabled=false;
+  if(!j||!j.ok){ $('ed-ask-help').textContent=(j&&j.error?`${m.name} did not answer: ${j.error}. `:'The model route did not answer. ')+'You can run the prompt yourself below and paste the answer.'; return; }
+  const parsed=parseModelAnswer(j.raw,DOC);
+  if(parsed.error){ $('ed-ask-help').innerHTML=`${esc(m.name)} answered, but ${esc(parsed.error)}<br><span class="mono">${esc(j.raw).slice(0,400)}</span>`; return; }
+  $('ed-ask-help').textContent=`${m.name} chose a word.`; edApplyParsed(parsed,m.name,m.id);
+}
 function edRender(){
   const cur=currentTokens(DOC); const marks=changedSet(DOC);
   $('ed-line').textContent=`${DOCS[DOC].short} · ${marks.size} word${marks.size===1?'':'s'} changed so far`;
@@ -545,7 +572,7 @@ function edRender(){
   document.querySelectorAll('#view-edit .seg button').forEach(b=>b.classList.toggle('on',b.dataset.doc===DOC));
 }
 async function edTap(si,i,word){
-  ED.pick={s:si,i,word}; openSheet(`<div class="def head"><b>${esc(word)}</b><span class="pos" id="sh-pos"></span><p id="sh-def" class="small">Looking it up…</p></div>`,[]);
+  if(ED.who==='model') return; ED.author=''; ED.why=''; ED.pick={s:si,i,word}; openSheet(`<div class="def head"><b>${esc(word)}</b><span class="pos" id="sh-pos"></span><p id="sh-def" class="small">Looking it up…</p></div>`,[]);
   try{ const [d,alts]=await Promise.all([defOf(word),synonymsOf(word)]); const pos=$('sh-pos'), def=$('sh-def'); if(pos&&def){ pos.textContent=d?d.pos:''; def.textContent=d?d.def:'No dictionary entry for this form.'; }
     const box=$('sheet-opts'); box.innerHTML=''; if(!alts.length){ box.innerHTML='<p class="small">No alternatives found for this word. Try another.</p>'; }
     alts.forEach(a=>{ const b=document.createElement('button'); b.type='button'; b.className='alt'; b.innerHTML=`<b>${esc(matchCase(word,a.word))}</b><span>${esc(a.def)}</span>`; b.addEventListener('click',()=>{ closeSheet(); edChoose(a,d); }); box.appendChild(b); });
@@ -558,6 +585,7 @@ function edChoose(alt,fromDef){
   renderProse($('ed-after'),after,{only:ED.pick.s,markTok:ED.pick.i});
   $('ed-defs').innerHTML=defsHtml(from,to,[fromDef,{pos:alt.pos,def:alt.def}]);
   $('ed-handle').value=store.get('handle','');
+  if(!ED.author){ $('ed-preview-title').textContent='Your change'; $('ed-why').hidden=true; }
   $('ed-help').textContent='It becomes the current text for everyone, and the next thing other visitors judge.'; $('ed-add').disabled=false;
   $('ed-preview').hidden=false; $('ed-preview').scrollIntoView({behavior:'smooth',block:'start'});
 }
@@ -565,10 +593,11 @@ async function edSubmit(){
   if(!ED.pick||!ED.alt) return; const handle=$('ed-handle').value.trim().slice(0,40); store.set('handle',handle);
   const cur=currentTokens(DOC); const after=cur[ED.pick.s].slice(); after[ED.pick.i]=ED.alt.to;
   const id='w-'+DOC[0]+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,6);
-  const bundle=JSON.stringify({kind:'word',id,doc:DOC,parent:latestId(DOC),s:ED.pick.s,i:ED.pick.i,from:ED.alt.from,to:ED.alt.to,handle,vid:VID,spec:sentenceText(after),mode:'word',verdict:{},page:location.href.split('#')[0],ts:new Date().toISOString()});
+  const byModel=!!ED.author; const author=byModel?ED.author:(handle||'anonymous');
+  const bundle=JSON.stringify({kind:'word',id,doc:DOC,parent:latestId(DOC),s:ED.pick.s,i:ED.pick.i,from:ED.alt.from,to:ED.alt.to,handle,author,model:byModel?ED.model:undefined,askedBy:byModel?handle:undefined,why:ED.why||undefined,vid:VID,spec:sentenceText(after),mode:'word',verdict:{},page:location.href.split('#')[0],ts:new Date().toISOString()});
   $('ed-add').disabled=true; $('ed-help').textContent='Sending…';
   let ok=false; try{ const r=await fetch(SUBMIT_URL,{method:'POST',mode:'cors',headers:{'Content-Type':'text/plain'},body:bundle}); if(r.ok){ const j=await r.json().catch(()=>({ok:true})); ok=j.ok!==false; } }catch(e){}
-  if(ok){ NODES.push({kind:'word',id,parent:latestId(DOC),doc:DOC,s:ED.pick.s,i:ED.pick.i,from:ED.alt.from,to:ED.alt.to,author:handle||'anonymous',ts:new Date().toISOString().slice(0,19)}); toast('Added. It is the current text now.'); $('ed-help').textContent='Added. Other visitors will judge it.'; store.set('myEdits',store.get('myEdits',0)+1); setTimeout(()=>{ edStart(); renderHome(); },900); setTimeout(loadChain,4000); }
+  if(ok){ NODES.push({kind:'word',id,parent:latestId(DOC),doc:DOC,s:ED.pick.s,i:ED.pick.i,from:ED.alt.from,to:ED.alt.to,author,model:byModel?ED.model:undefined,askedBy:byModel?handle:undefined,why:ED.why||undefined,ts:new Date().toISOString().slice(0,19)}); toast('Added. It is the current text now.'); $('ed-help').textContent='Added. Other visitors will judge it.'; store.set('myEdits',store.get('myEdits',0)+1); setTimeout(()=>{ edStart(); renderHome(); },900); setTimeout(loadChain,4000); }
   else { await copyText(bundle,'Copied'); $('ed-help').innerHTML=`No answer from the server. Your change is on the clipboard: <a href="${esc(FORM_URL)}" target="_blank" rel="noopener"><b>paste it into the form</b></a>.`; $('ed-add').disabled=false; }
 }
 function openSheet(headHtml,opts){ $('sheet-head').innerHTML=headHtml; const box=$('sheet-opts'); box.innerHTML=opts.length?'':'<p class="small">Loading alternatives…</p>'; $('sheet').classList.add('open'); $('scrim').classList.add('open'); }
@@ -581,7 +610,7 @@ function renderChain(){
   document.querySelectorAll('#view-chain .seg button').forEach(b=>b.classList.toggle('on',b.dataset.doc===DOC));
   $('ch-line').textContent=`${DOCS[DOC].name} · ${list.length} change${list.length===1?'':'s'} · ${marks.size} word${marks.size===1?'':'s'} differ from the original`;
   renderProse($('ch-text'),currentTokens(DOC),{marks});
-  $('ch-list').innerHTML=list.length?list.slice().reverse().map(n=>{ const t=TALLY[n.id]||{n:0,same:0,changed:0,unresolved:0}; return `<div class="node"><div><b>${esc(n.from)} → ${esc(n.to)}</b> <span class="meta">sentence ${n.s+1} · ${esc(n.author||'anonymous')} · ${esc((n.ts||'').slice(5,16).replace('T',' '))}</span>${tallyHtml(n.id)}</div></div>`; }).join(''):'<p class="small">No changes yet. Be the first.</p>';
+  $('ch-list').innerHTML=list.length?list.slice().reverse().map(n=>{ const t=TALLY[n.id]||{n:0,same:0,changed:0,unresolved:0}; return `<div class="node"><div><b>${esc(n.from)} → ${esc(n.to)}</b> <span class="meta">sentence ${n.s+1} · ${esc(n.author||'anonymous')}${n.askedBy?` · asked by ${esc(n.askedBy)}`:''} · ${esc((n.ts||'').slice(5,16).replace('T',' '))}</span>${n.why?`<p class="why">“${esc(n.why)}”</p>`:''}${tallyHtml(n.id)}</div></div>`; }).join(''):'<p class="small">No changes yet. Be the first.</p>';
 }
 
 // ---------- HOME / ABOUT ----------
@@ -600,22 +629,20 @@ function renderAbout(){ for(const k in DOCS){ const d=DOCS[k]; $('about-'+k).inn
 // ---------- navigation ----------
 const VIEWS=['home','judge','edit','chain','about'];
 const HOWTO={
-  home:`<h2>How it works</h2><p class="small" style="margin-top:-4px">What is measured, and what is not.</p><p>Two published specifications, five sentences each, assembled from quotations. The originals stay on the About page and never change. Visitors change one word at a time; each change becomes the current text and the next thing other visitors judge.</p><p>Two things are recorded: how many words differ from the original, and for every change, how many judges called it the same, changed, or unresolved. There is no oracle for meaning here. Disagreement is the result, not noise.</p>`,
+  home:`<h2>How it works</h2><p class="small" style="margin-top:-4px">What is measured, and what is not.</p><p>Two published specifications, five sentences each, assembled from quotations. The originals never change; <a href="#about">read them here</a>. Visitors, or the models they ask, change one word at a time; each change becomes the current text and the next thing other visitors judge.</p><p>Two things are recorded: how many words differ from the original, and for every change, how many judges called it the same, changed, or unresolved. There is no oracle for meaning here. Disagreement is the result, not noise.</p>`,
   latest:`<h2>The current text</h2><p>The original with every accepted change applied, in order. Changed words are marked. The number in the top bar counts them.</p>`,
   judge:`<h2>Judging</h2><ul class="howto"><li>One word has been swapped. Decide: same meaning, or changed? Then say how sure you are.</li><li>The dictionary then shows both definitions. Decide again.</li><li>You see how others judged the same swap. Nobody is told who is right.</li><li>Four rounds. Your answers and timings are recorded anonymously.</li></ul>`,
-  edit:`<h2>Changing a word</h2><ul class="howto"><li>Tap any marked word. A sheet shows its definition and up to eight alternatives with theirs, from the Datamuse dictionary.</li><li>Pick one. Review the sentence, add a handle if you like, add it to the chain.</li><li>One word per change. It becomes the current text for everyone.</li></ul>`,
+  edit:`<h2>Changing a word</h2><ul class="howto"><li><b>You:</b> tap any marked word. A sheet shows its definition and up to eight alternatives with theirs, from the Datamuse dictionary. Pick one.</li><li><b>A model:</b> pick one of six, the oldest and newest flagship each company still serves. It gets the current text and the same task, and must answer with the sentence, the word, the replacement and a reason. You see its choice and its reason before adding it.</li><li>One word per change. It becomes the current text for everyone and is attributed to you or to the model.</li></ul>`,
   chain:`<h2>The drift so far</h2><p>Every change in order, newest first, with the crowd's verdict on each. The bar is purple for changed, green for same, grey for unresolved.</p>`,
   about:`<h2>About</h2><p>Companion to <i>When Specifications Drift</i> (Patel &amp; Corpaci, NeurIPS 2026 VeriCodeGen). A chain of individually reasonable edits can end somewhere the original never was.</p>`
 };
 let current='home';
 function go(v){
-  const demo=(v==='demo'); if(demo) v='judge';
   if(!VIEWS.includes(v)) v='home';
-  if(current==='judge'&&!demo) demoStop();
   VIEWS.forEach(x=>$('view-'+x).hidden=(x!==v)); current=v;
   $('back').hidden=(v==='home'); $('app').classList.toggle('wide',v==='about');
   if(location.hash!=='#'+v && !(v==='home'&&!location.hash)) history.replaceState(null,'','#'+v);
-  if(v==='home') renderHome(); if(v==='judge'){ if(demo) jgDemo(); else jgStart(); } if(v==='edit') edStart(); if(v==='chain') renderChain(); if(v==='about') renderAbout();
+  if(v==='home') renderHome(); if(v==='judge') jgStart(); if(v==='edit') edStart(); if(v==='chain') renderChain(); if(v==='about') renderAbout();
   window.scrollTo({top:0});
 }
 document.querySelectorAll('[data-go]').forEach(el=>el.addEventListener('click',()=>go(el.dataset.go)));
@@ -628,8 +655,13 @@ document.querySelectorAll('#jg-step1 .choice button').forEach(b=>b.addEventListe
 document.querySelectorAll('#jg-conf1 button').forEach(b=>b.addEventListener('click',()=>jgConf1(b.dataset.conf)));
 document.querySelectorAll('#jg-choice2 button').forEach(b=>b.addEventListener('click',()=>jgPick2(b.dataset.ans)));
 document.querySelectorAll('#jg-conf2 button').forEach(b=>b.addEventListener('click',()=>jgConf2(b.dataset.conf)));
-$('ed-undo').addEventListener('click',()=>{ $('ed-preview').hidden=true; ED.alt=null; });
+$('ed-undo').addEventListener('click',()=>{ $('ed-preview').hidden=true; ED.alt=null; ED.author=''; ED.why=''; });
 $('ed-add').addEventListener('click',edSubmit);
+$('how-btn').addEventListener('click',()=>openDialog(HOWTO.home));
+document.querySelectorAll('#view-edit .seg.who button').forEach(b=>b.addEventListener('click',()=>{ ED.who=b.dataset.who; $('ed-preview').hidden=true; ED.alt=null; edRenderModels(); }));
+$('ed-ask').addEventListener('click',edAsk);
+$('ed-copy-prompt').addEventListener('click',()=>copyText(promptText(DOC),'Prompt copied. Paste it into any model.'));
+$('ed-parse').addEventListener('click',()=>{ const parsed=parseModelAnswer($('ed-paste').value,DOC); if(parsed.error){ $('ed-parse-help').textContent=parsed.error; return; } const m=MODELS.find(x=>x.id===ED.model); $('ed-parse-help').textContent=''; edApplyParsed(parsed,m?m.name:'a model',m?m.id:'other'); });
 
 // ---------- live data ----------
 async function loadChain(){
@@ -645,9 +677,7 @@ async function loadTally(){ try{ const r=await fetch(VERDICTS_URL,{cache:'no-sto
 // first paint
 const d=new Date(); $('date-line').textContent=`${d.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'})} · Swiss AI Safety Days, ETH Zürich`;
 renderAbout(); renderHome(); loadChain(); loadTally(); setInterval(loadChain,30000); setInterval(loadTally,30000);
-const h0=location.hash.slice(1);
-if(!h0 && !store.get('seenReplay2',false)){ store.set('seenReplay2',true); go('demo'); }
-else go(h0||'home');
+go(location.hash.slice(1)||'home');
 </script>
 </body>
 </html>
