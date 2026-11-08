@@ -651,7 +651,7 @@ function renderHome(){
   $('cur-title').textContent=DOCS[DOC].name;
   $('cur-state').innerHTML=list.length?`<span class="pill hotp">${marks.size} word${marks.size===1?'':'s'} changed</span>`:'<span class="pill good">original</span>';
   renderProse($('cur-text'),currentTokens(DOC),{marks});
-  $('cur-dist').innerHTML=`Assembled from quotations · <a href="${DOCS[DOC].url}" target="_blank" rel="noopener">source</a>${list.length?` · ${list.length} change${list.length===1?'':'s'} by ${new Set(list.map(n=>n.author)).size} visitor${new Set(list.map(n=>n.author)).size===1?'':'s'}`:' · no changes yet'}`;
+  $('cur-dist').innerHTML=`Assembled from quotations · <a href="${DOCS[DOC].url}" target="_blank" rel="noopener">source</a>${list.length?` · ${list.length} change${list.length===1?'':'s'} so far`:' · no changes yet'}`;
   const jh=store.get('jgHist',[]); $('st-judge').textContent=jh.length?`${jh.reduce((a,x)=>a+x.changed+x.same+x.unres,0)}`:'–'; $('st-edits').textContent=String(NODES.length); $('st-judg').textContent=String(Object.values(TALLY).reduce((a,t)=>a+(t.n||0),0));
 }
 function renderAbout(){ for(const k in DOCS){ const d=DOCS[k]; $('about-'+k).innerHTML=`<h3>${esc(d.name)}</h3><div class="prose">${ORIG[k].map((t,i)=>`<p class="sent"><span class="num">${i+1}</span><span class="body">${esc(sentenceText(t))}</span></p>`).join('')}</div><p class="small" style="margin-top:8px"><a href="${d.url}" target="_blank" rel="noopener">Read the original</a></p>`; } }
