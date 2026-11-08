@@ -589,7 +589,8 @@ async function askOnce(body,ms,ac){ const t=setTimeout(()=>ac.abort(),ms); try{ 
 async function edAsk(){
   const m=MODELS.find(x=>x.id===ED.model); if(!m||ED.asking) return; const btn=$('ed-ask'); btn.disabled=true;
   const seq=++ED.seq; const ac=new AbortController(); ED.asking=ac;
-  const t0=Date.now(); clearInterval(ED.tick); ED.tick=setInterval(()=>{ if(ED.seq!==seq) return; $('ed-ask-help').textContent=`Asking ${m.name}… ${Math.round((Date.now()-t0)/1000)} s. It usually takes ${m.lat.replace('~','about ')}; the newer models think before they answer. Pick another model to cancel.`; },500); $('ed-ask-help').textContent=`Asking ${m.name}… it usually takes ${m.lat.replace('~','about ')}.`;
+  const t0=Date.now(); let ping=null; (async()=>{ const p0=Date.now(); try{ const r=await fetch(VERDICTS_URL,{cache:'no-store'}); await r.text(); ping=Date.now()-p0; }catch(e){ ping=-1; } })();
+  clearInterval(ED.tick); ED.tick=setInterval(()=>{ if(ED.seq!==seq) return; const net=ping===null?'':ping<0?' Your connection to the server is failing.':` Your connection to the server: ${(ping/1000).toFixed(1)} s round trip.`; $('ed-ask-help').textContent=`Asking ${m.name}… ${Math.round((Date.now()-t0)/1000)} s. It usually takes ${m.lat.replace('~','about ')} on a good connection.${net} Pick another model to cancel.`; },500); $('ed-ask-help').textContent=`Asking ${m.name}… it usually takes ${m.lat.replace('~','about ')}.`;
   const T=currentTokens(DOC); const text=T.map((t,i)=>(i+1)+'. '+sentenceText(t)).join('\n'); const body=JSON.stringify({doc:DOC,model:m.id,text,handle:store.get('handle','')});
   let j=await askOnce(body,75000,ac); if(j===null&&ED.seq===seq){ $('ed-ask-help').textContent=`No answer yet, asking ${m.name} once more…`; j=await askOnce(body,75000,ac); }
   if(ED.seq!==seq||j==='cancelled') return; // a newer ask or a cancel took over
