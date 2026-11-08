@@ -705,7 +705,7 @@ async function loadChain(){
 }
 async function loadTally(){ try{ const r=await fetch(VERDICTS_URL,{cache:'no-store'}); if(!r.ok) return; const j=await r.json(); if(j&&typeof j==='object'){ TALLY=j; if(current==='home') renderHome(); if(current==='chain') renderChain(); } }catch(e){} }
 // first paint
-const d=new Date(); $('date-line').textContent=`${d.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'})} · Swiss AI Safety Days, ETH Zürich`;
+const d=new Date(); $('date-line').textContent=`${d.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'})} · Swiss AI Safety Days, Zürich`;
 renderAbout(); renderHome(); loadChain(); loadTally(); setInterval(loadChain,30000); setInterval(loadTally,30000);
 go(location.hash.slice(1)||'home');
 </script>
