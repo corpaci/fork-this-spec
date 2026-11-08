@@ -245,6 +245,7 @@ a{color:var(--accent)}
 .prose.edit.readonly .w.ed{border-bottom-color:transparent;cursor:default}
 .mono{font-family:var(--font-mono);font-size:12px;white-space:pre-wrap}
 .preview .def{background:var(--surface)}
+.dict{margin-top:6px;color:var(--muted)} .dict b{color:var(--fg);font-weight:600}
 </style>
 
 <div class="app" id="app">
@@ -475,6 +476,22 @@ async function synonymsOf(word){
   return out.slice(0,8);
 }
 
+// ---------- dictionary distance: mutual rank among meaning-like words, and listed-synonym membership ----------
+function stemKey(w){ w=String(w).toLowerCase(); return w.replace(/(ing|ly|ed|es|s)$/,''); }
+async function dictDistance(from,to){
+  const f=from.toLowerCase(), t=to.toLowerCase(); const enc=encodeURIComponent;
+  const [mlF,synF,mlT,synT]=await Promise.all([dmFetch('ml='+enc(f)+'&max=60'),dmFetch('rel_syn='+enc(f)+'&max=60'),dmFetch('ml='+enc(t)+'&max=60'),dmFetch('rel_syn='+enc(t)+'&max=60')]);
+  const match=(list,w)=>{ const k=stemKey(w); const i=(list||[]).findIndex(x=>x.word&&(x.word.toLowerCase()===w||stemKey(x.word)===k)); return i<0?null:i+1; };
+  return {rankAB:match(mlF,t),rankBA:match(mlT,f),synAB:match(synF,t)!==null,synBA:match(synT,f)!==null};
+}
+function dictHtml(d,from,to){
+  if(!d) return '';
+  let head; if(d.synAB&&d.synBA) head='listed synonyms of each other'; else if(d.synAB||d.synBA) head=`a listed synonym one way (${d.synAB?from+' → '+to:to+' → '+from}), not the other`; else if(d.rankAB!==null||d.rankBA!==null) head='not listed as synonyms, related in meaning'; else head='no dictionary link between the two words';
+  const r=x=>x===null?'—':'#'+x;
+  return `<p class="small dict"><b>Dictionary:</b> ${esc(head)} · meaning-likeness rank ${r(d.rankAB)} → / ${r(d.rankBA)} ←</p>`;
+}
+function fillDict(elId,from,to){ dictDistance(from,to).then(d=>{ const el=$(elId); if(el) el.innerHTML=dictHtml(d,from,to); }).catch(()=>{}); }
+
 // ---------- JUDGE ----------
 const JG={pool:[],i:0,round:0,results:[],first:null,firstConf:null,second:null,secondConf:null,t0:0,t1:0,t2:0,cur:null,defs:null};
 const ROUNDS=4;
@@ -488,8 +505,9 @@ function jgRender(){
   $('jg-title').textContent='Same meaning, or changed?';
   jgPaint(pz);
   $('jg-progress').innerHTML=[0,1,2,3].map(i=>`<i class="${JG.results[i]===undefined?(i===JG.round?'cur':''):'done'}"></i>`).join('');
-  // prefetch definitions
+  // prefetch definitions and the dictionary distance
   Promise.all([defOf(pz.from),defOf(pz.to)]).then(d=>{ JG.defs=d; }).catch(()=>{ JG.defs=[null,null]; });
+  dictDistance(pz.from,pz.to).catch(()=>{});
 }
 function jgPaint(pz){
   renderProse($('jg-left'),pz.before,{only:pz.item.s,markTok:pz.item.i});
@@ -510,9 +528,9 @@ function jgReveal(){
   const word=a=>a==='same'?'Same':a==='changed'?'Changed':'Unresolved';
   let html=`<p class="outcome">${moved?`${word(JG.first)}, then ${word(JG.second)}.`:`${word(JG.second)}, both times.`}</p>`;
   html+=`<p>${esc(pz.from)} → ${esc(pz.to)}${pz.item.seed?'':` · changed by ${esc(pz.item.author||'a visitor')}${pz.item.askedBy?`, asked by ${esc(pz.item.askedBy)}`:''}`}.</p>${pz.item.why?`<p class="why">“${esc(pz.item.why)}”</p>`:''}`+tallyHtml(id,JG.second);
-  html+=`<p class="small" style="margin-top:8px">No oracle decides this one. The record is the disagreement.</p>`;
+  html+=`<div id="jg-dict"></div><p class="small" style="margin-top:8px">No oracle decides this one. The record is the disagreement.</p>`;
   html+=`<div class="actions"><button id="jg-next" class="primary">${JG.round<ROUNDS-1?'Next':'Your result'}</button></div>`;
-  $('jg-reveal').innerHTML=html; $('jg-reveal').hidden=false; $('jg-step2').hidden=true;
+  $('jg-reveal').innerHTML=html; $('jg-reveal').hidden=false; $('jg-step2').hidden=true; fillDict('jg-dict',pz.from,pz.to);
   $('jg-progress').innerHTML=[0,1,2,3].map(i=>`<i class="${JG.results[i]===undefined?'':'done'}"></i>`).join('');
   const done=store.get('jgDone',[]); done.push(id); store.set('jgDone',done.slice(-40));
   const t=TALLY[id]||(TALLY[id]={n:0,same:0,changed:0,unresolved:0}); t.n++; t[JG.second==='same'?'same':JG.second==='changed'?'changed':'unresolved']++;
@@ -583,7 +601,7 @@ function edChoose(alt,fromDef){
   const cur=currentTokens(DOC); const from=cur[ED.pick.s][ED.pick.i]; const to=matchCase(from,alt.word); ED.alt={from,to,alt};
   const after=cur.map(t=>t.slice()); after[ED.pick.s][ED.pick.i]=to;
   renderProse($('ed-after'),after,{only:ED.pick.s,markTok:ED.pick.i});
-  $('ed-defs').innerHTML=defsHtml(from,to,[fromDef,{pos:alt.pos,def:alt.def}]);
+  $('ed-defs').innerHTML=defsHtml(from,to,[fromDef,{pos:alt.pos,def:alt.def}])+'<div id="ed-dict"></div>'; fillDict('ed-dict',from,to);
   $('ed-handle').value=store.get('handle','');
   if(!ED.author){ $('ed-preview-title').textContent='Your change'; $('ed-why').hidden=true; }
   $('ed-help').textContent='It becomes the current text for everyone, and the next thing other visitors judge.'; $('ed-add').disabled=false;
@@ -610,7 +628,8 @@ function renderChain(){
   document.querySelectorAll('#view-chain .seg button').forEach(b=>b.classList.toggle('on',b.dataset.doc===DOC));
   $('ch-line').textContent=`${DOCS[DOC].name} · ${list.length} change${list.length===1?'':'s'} · ${marks.size} word${marks.size===1?'':'s'} differ from the original`;
   renderProse($('ch-text'),currentTokens(DOC),{marks});
-  $('ch-list').innerHTML=list.length?list.slice().reverse().map(n=>{ const t=TALLY[n.id]||{n:0,same:0,changed:0,unresolved:0}; return `<div class="node"><div><b>${esc(n.from)} → ${esc(n.to)}</b> <span class="meta">sentence ${n.s+1} · ${esc(n.author||'anonymous')}${n.askedBy?` · asked by ${esc(n.askedBy)}`:''} · ${esc((n.ts||'').slice(5,16).replace('T',' '))}</span>${n.why?`<p class="why">“${esc(n.why)}”</p>`:''}${tallyHtml(n.id)}</div></div>`; }).join(''):'<p class="small">No changes yet. Be the first.</p>';
+  $('ch-list').innerHTML=list.length?list.slice().reverse().map(n=>{ const t=TALLY[n.id]||{n:0,same:0,changed:0,unresolved:0}; return `<div class="node"><div><b>${esc(n.from)} → ${esc(n.to)}</b> <span class="meta">sentence ${n.s+1} · ${esc(n.author||'anonymous')}${n.askedBy?` · asked by ${esc(n.askedBy)}`:''} · ${esc((n.ts||'').slice(5,16).replace('T',' '))}</span>${n.why?`<p class="why">“${esc(n.why)}”</p>`:''}<div id="dict-${esc(n.id)}"></div>${tallyHtml(n.id)}</div></div>`; }).join(''):'<p class="small">No changes yet. Be the first.</p>';
+  list.forEach(n=>fillDict('dict-'+n.id,n.from,n.to));
 }
 
 // ---------- HOME / ABOUT ----------
@@ -631,9 +650,9 @@ const VIEWS=['home','judge','edit','chain','about'];
 const HOWTO={
   home:`<h2>How it works</h2><p class="small" style="margin-top:-4px">What is measured, and what is not.</p><p>Two published specifications, five sentences each, assembled from quotations. The originals never change; <a href="#about">read them here</a>. Visitors, or the models they ask, change one word at a time; each change becomes the current text and the next thing other visitors judge.</p><p>Two things are recorded: how many words differ from the original, and for every change, how many judges called it the same, changed, or unresolved. There is no oracle for meaning here. Disagreement is the result, not noise.</p>`,
   latest:`<h2>The current text</h2><p>The original with every accepted change applied, in order. Changed words are marked. The number in the top bar counts them.</p>`,
-  judge:`<h2>Judging</h2><ul class="howto"><li>One word has been swapped. Decide: same meaning, or changed? Then say how sure you are.</li><li>The dictionary then shows both definitions. Decide again.</li><li>You see how others judged the same swap. Nobody is told who is right.</li><li>Four rounds. Your answers and timings are recorded anonymously.</li></ul>`,
+  judge:`<h2>Judging</h2><ul class="howto"><li>One word has been swapped. Decide: same meaning, or changed? Then say how sure you are.</li><li>The dictionary then shows both definitions. Decide again.</li><li>You see how others judged the same swap, and what the dictionary says: whether the two words are listed synonyms of each other, and where each ranks among words that mean like the other (Datamuse, Wiktionary and WordNet). A lexical measure, shown after you decide. Nobody is told who is right.</li><li>Four rounds. Your answers and timings are recorded anonymously.</li></ul>`,
   edit:`<h2>Changing a word</h2><ul class="howto"><li><b>You:</b> tap any marked word. A sheet shows its definition and up to eight alternatives with theirs, from the Datamuse dictionary. Pick one.</li><li><b>A model:</b> pick one of six, the oldest and newest flagship each company still serves. It gets the current text and the same task, and must answer with the sentence, the word, the replacement and a reason. You see its choice and its reason before adding it.</li><li>One word per change. It becomes the current text for everyone and is attributed to you or to the model.</li></ul>`,
-  chain:`<h2>The drift so far</h2><p>Every change in order, newest first, with the crowd's verdict on each. The bar is purple for changed, green for same, grey for unresolved.</p>`,
+  chain:`<h2>The drift so far</h2><p>Every change in order, newest first, with the crowd's verdict on each. The bar is purple for changed, green for same, grey for unresolved.</p><p class="small">The dictionary line is a lexical distance: are the two words listed synonyms of each other, and at what rank does each appear among words that mean like the other (→ old to new, ← new to old). It knows nothing about the sentence.</p>`,
   about:`<h2>About</h2><p>Companion to <i>When Specifications Drift</i> (Patel &amp; Corpaci, NeurIPS 2026 VeriCodeGen). A chain of individually reasonable edits can end somewhere the original never was.</p>`
 };
 let current='home';
