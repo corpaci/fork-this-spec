@@ -213,12 +213,12 @@ a{color:var(--accent)}
       <div class="stat"><b id="st-break">–</b><span>best break</span></div>
       <div class="stat"><b id="st-chain">–</b><span>revisions</span></div>
     </div>
-    <div class="row" style="margin-top:16px;justify-content:center"><button class="ghost" data-go="demo">Watch a recorded round</button><button class="ghost" data-go="model">Let a model play</button><button class="ghost" data-go="fix">Restore the intent</button><button class="ghost" data-go="chain">The drift so far</button><button class="ghost" data-go="about">How it works</button></div>
+    <div class="row" style="margin-top:16px;justify-content:center"><button class="ghost" data-go="demo">Watch an example round</button><button class="ghost" data-go="model">Let a model play</button><button class="ghost" data-go="fix">Restore the intent</button><button class="ghost" data-go="chain">The drift so far</button><button class="ghost" data-go="about">How it works</button></div>
   </section>
 
   <!-- JUDGE -->
   <section id="view-judge" hidden>
-    <div class="banner" id="jg-banner" hidden><span class="dot"></span><span id="jg-banner-text">Recorded round, not live.</span><button class="ghost" id="jg-banner-btn" type="button">Skip to the end</button></div>
+    <div class="banner" id="jg-banner" hidden><span class="dot"></span><span id="jg-banner-text">Example round, scripted. Not a real visitor.</span><button class="ghost" id="jg-banner-btn" type="button">Skip to the end</button></div>
     <p class="date" id="jg-puzzle"></p>
     <div class="hrow"><h2 id="jg-title">Same meaning, or changed?</h2><button class="info" data-info="judge" aria-label="How judging works">i</button></div>
     <div class="progress" id="jg-progress"></div>
@@ -713,8 +713,8 @@ function jgDemo(){
   const done=store.get('jgDone',[]); if(!done.includes('j1')){ done.push('j1'); store.set('jgDone',done.slice(-12)); }
   jgStart(); demoStop(); DEMO.on=true; $('view-judge').classList.add('demo');
   const p=DECK.find(d=>d.id==='j1'); const t=jgTruth(p); JG.cur=p;
-  jgPaint(p); $('jg-puzzle').textContent='Recorded round · a visitor on day one'; $('jg-title').textContent='Same meaning, or changed?'; $('jg-progress').innerHTML='';
-  const banner=$('jg-banner'); banner.hidden=false; banner.classList.remove('done'); $('jg-banner-text').textContent='Recorded round, not live.'; $('jg-banner-btn').textContent='Skip to the end';
+  jgPaint(p); $('jg-puzzle').textContent='Example round · how a round goes'; $('jg-title').textContent='Same meaning, or changed?'; $('jg-progress').innerHTML='';
+  const banner=$('jg-banner'); banner.hidden=false; banner.classList.remove('done'); $('jg-banner-text').textContent='Example round, scripted. Not a real visitor.'; $('jg-banner-btn').textContent='Skip to the end';
   const steps=[
     [1500,()=>{ demoPick('#jg-step1 .choice','ans','same'); $('jg-conf1').hidden=false; }],
     [2400,()=>{ demoPick('#jg-conf1','conf','fairly'); }],
@@ -731,7 +731,7 @@ function demoReveal(p,t){
   $('jg-step2').hidden=true;
   $('jg-reveal').innerHTML=`<p class="outcome">Rescued by the assistance.</p><p>${pill(relWord(t.rel))} ${bd.flipped} of 2,016 executions flip${bd.newViol?`, ${bd.newViol} over budget now pass`:''}.</p><p>The critique was <b>honest</b>. Some are not: a critic can argue well for the wrong answer, and an example can fail to flip. The page replays every example, so you can check.</p><p class="small">Help is assigned at random for your visit: a second look, a critique, or a critique with an example.</p><div class="actions"><button id="jg-next" class="primary">Judge one yourself</button></div>`;
   $('jg-reveal').hidden=false;
-  const banner=$('jg-banner'); banner.classList.add('done'); $('jg-banner-text').textContent='That was a recording.'; $('jg-banner-btn').textContent='Judge one yourself';
+  const banner=$('jg-banner'); banner.classList.add('done'); $('jg-banner-text').textContent='That was the example.'; $('jg-banner-btn').textContent='Judge one yourself';
   $('jg-next').addEventListener('click',()=>{ demoStop(); jgStart(); });
 }
 function jgAssistHtml(p){
