@@ -140,6 +140,19 @@ dialog::backdrop{background:rgba(0,0,0,.4)}
 .hrow h2,.hrow h3{margin:0}
 .lead{font-size:17px;color:var(--muted);margin:0 0 6px}
 .small .info{width:18px;height:18px;font-size:10px}
+.drift{display:grid;justify-items:end;gap:1px;border:none;background:none;padding:0 4px;min-height:0;border-radius:8px;margin-left:auto;cursor:pointer;color:var(--fg)}
+.drift b{font-family:var(--font-mono);font-size:21px;line-height:1;color:var(--equiv);font-weight:600}
+.drift.hot b{color:var(--hot)} .drift.cold b{color:var(--stronger)}
+.drift span{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.banner{display:flex;align-items:center;gap:10px;background:var(--surface-2);border-radius:10px;padding:8px 12px;margin:6px 0 10px;font-size:14px}
+.banner .dot{width:8px;height:8px;border-radius:50%;background:var(--equiv);flex:none}
+.banner.done .dot{background:var(--muted)}
+.banner button{margin-left:auto;min-height:34px;padding:6px 12px;font-size:13px;white-space:nowrap}
+.demo .board .choice button,.demo .board .conf button{pointer-events:none}
+.conf button.picked{background:var(--btn);color:var(--btn-ink);border-color:var(--btn)}
+.cursor{position:relative} .cursor:after{content:"";position:absolute;inset:-4px;border:2px solid var(--accent);border-radius:999px;animation:tap .5s ease-out}
+@keyframes tap{from{opacity:1;transform:scale(.92)}to{opacity:0;transform:scale(1.08)}}
+@media (prefers-reduced-motion: reduce){.cursor:after{animation:none;display:none}}
 .three{display:grid;gap:4px;margin:10px 0;font-size:15px}
 .three div{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px}
 .three b{font-family:var(--font-mono);font-weight:600}
@@ -176,6 +189,7 @@ a{color:var(--accent)}
   <div class="top">
     <button class="iconbtn" id="back" aria-label="Back" hidden>←</button>
     <div class="title" id="toptitle">Fork <em>this spec</em></div>
+    <button class="drift" id="top-drift" data-info="latest" aria-label="Behavioural drift of the current rule from v0"><b>0</b><span>drift · of 2,016</span></button>
     <button class="iconbtn" id="howto-btn" aria-label="Help">?</button>
   </div>
 
@@ -199,11 +213,12 @@ a{color:var(--accent)}
       <div class="stat"><b id="st-break">–</b><span>best break</span></div>
       <div class="stat"><b id="st-chain">–</b><span>revisions</span></div>
     </div>
-    <div class="row" style="margin-top:16px;justify-content:center"><button class="ghost" data-go="model">Let a model play</button><button class="ghost" data-go="fix">Restore the intent</button><button class="ghost" data-go="chain">The drift so far</button><button class="ghost" data-go="about">How it works</button></div>
+    <div class="row" style="margin-top:16px;justify-content:center"><button class="ghost" data-go="demo">Watch a recorded round</button><button class="ghost" data-go="model">Let a model play</button><button class="ghost" data-go="fix">Restore the intent</button><button class="ghost" data-go="chain">The drift so far</button><button class="ghost" data-go="about">How it works</button></div>
   </section>
 
   <!-- JUDGE -->
   <section id="view-judge" hidden>
+    <div class="banner" id="jg-banner" hidden><span class="dot"></span><span id="jg-banner-text">Recorded round, not live.</span><button class="ghost" id="jg-banner-btn" type="button">Skip to the end</button></div>
     <p class="date" id="jg-puzzle"></p>
     <div class="hrow"><h2 id="jg-title">Same meaning, or changed?</h2><button class="info" data-info="judge" aria-label="How judging works">i</button></div>
     <div class="progress" id="jg-progress"></div>
@@ -375,6 +390,7 @@ a{color:var(--accent)}
 
   <footer>
     <div class="row between"><span>Luiza Corpaci · TU Wien · Apart Research (SPS) · CAISH MARS V · Swiss AI Safety Days 2026</span><span>corpaci.luiza@gmail.com</span></div>
+    <div style="margin-top:6px">Research demo. Judgments and accepted revisions are recorded; nothing identifies you unless you add a handle.</div>
   </footer>
 </div>
 
@@ -669,10 +685,14 @@ revision:  used = ${ub} → ${cb?'certified':'refused'}${ca!==cb?'\n→ the verd
 function jgStart(){ const done=store.get('jgDone',[]); JG.order=jgDeckOrder().filter(i=>!done.includes(DECK[i].id)); if(JG.order.length<ROUNDS+1) JG.order=jgDeckOrder(); JG.i=0; JG.round=0; JG.results=[]; JG.transfer=false; jgRender(); }
 function jgPickTransfer(){ const seen=JG.results.map(r=>DECK.find(d=>d.id===r.id)); const seenIds=new Set(seen.map(d=>d.id)); const kinds=seen.filter(d=>d.kind!=='equiv').map(d=>d.kind); const pool=DECK.map((d,i)=>({d,i})).filter(x=>!seenIds.has(x.d.id)); let cand=pool.filter(x=>kinds.includes(x.d.kind)); if(!cand.length) cand=pool.filter(x=>x.d.kind!=='equiv'); if(!cand.length) cand=pool; const rnd=mulberry32(hashStr(VID+'t')); return cand[Math.floor(rnd()*cand.length)].i; }
 function jgRender(){
+  demoStop();
   const p=JG.transfer?DECK[jgPickTransfer()]:DECK[JG.order[JG.i]]; JG.cur=p; JG.first=null; JG.firstConf=null; JG.second=null; JG.secondConf=null; JG.wAns=null; JG.t0=Date.now();
   $('jg-puzzle').textContent=JG.transfer?`Round 4 of 4 · on your own · ${p.id}`:`Round ${JG.round+1} of 4 · ${p.id}`;
   $('jg-title').textContent=JG.transfer?'Last one, no help. Same meaning, or changed?':'Same meaning, or changed?';
   $('jg-progress').innerHTML=[0,1,2,3].map(i=>`<i class="${JG.results[i]===undefined?(i===JG.round?'cur':''):(JG.results[i].finalOK?'ok':'ko')}"></i>`).join('');
+  jgPaint(p);
+}
+function jgPaint(p){
   const L=toLines(p.before), R=toLines(p.after);
   renderSpecGrid($('jg-left'),L,{});
   renderSpecGrid($('jg-right'),R,{});
@@ -682,7 +702,37 @@ function jgRender(){
   const mask=new Array(m).fill(true); let i=0,j=0; while(i<n&&j<m){ if(a[i]===b[j]){mask[j]=false;i++;j++;} else if(T[i+1][j]>=T[i][j+1]) i++; else j++; }
   const spans=[...$('jg-right').querySelectorAll('.tk')].filter(e=>!e.classList.contains('name')); spans.forEach((e,k)=>{ if(mask[k]) e.classList.add('diffm'); });
   $('jg-step1').hidden=false; $('jg-step2').hidden=true; $('jg-reveal').hidden=true; $('jg-conf1').hidden=true; $('jg-conf2').hidden=true;
-  document.querySelectorAll('#jg-step1 .choice button,#jg-choice2 button').forEach(b=>{ b.classList.remove('picked'); b.disabled=false; });
+  document.querySelectorAll('#jg-step1 .choice button,#jg-choice2 button,#jg-conf1 button,#jg-conf2 button').forEach(b=>{ b.classList.remove('picked','cursor'); b.disabled=false; });
+}
+// ---------- recorded round (demo) ----------
+const DEMO={on:false,timers:[]};
+function demoAt(ms,fn){ DEMO.timers.push(setTimeout(fn,ms)); }
+function demoStop(){ DEMO.timers.forEach(clearTimeout); DEMO.timers=[]; DEMO.on=false; $('view-judge').classList.remove('demo'); $('jg-banner').hidden=true; }
+function demoPick(sel,key,val){ document.querySelectorAll(sel+' button').forEach(b=>{ const on=b.dataset[key]===val; b.classList.toggle('picked',on); b.classList.toggle('cursor',on); }); }
+function jgDemo(){
+  const done=store.get('jgDone',[]); if(!done.includes('j1')){ done.push('j1'); store.set('jgDone',done.slice(-12)); }
+  jgStart(); demoStop(); DEMO.on=true; $('view-judge').classList.add('demo');
+  const p=DECK.find(d=>d.id==='j1'); const t=jgTruth(p); JG.cur=p;
+  jgPaint(p); $('jg-puzzle').textContent='Recorded round · a visitor on day one'; $('jg-title').textContent='Same meaning, or changed?'; $('jg-progress').innerHTML='';
+  const banner=$('jg-banner'); banner.hidden=false; banner.classList.remove('done'); $('jg-banner-text').textContent='Recorded round, not live.'; $('jg-banner-btn').textContent='Skip to the end';
+  const steps=[
+    [1500,()=>{ demoPick('#jg-step1 .choice','ans','same'); $('jg-conf1').hidden=false; }],
+    [2400,()=>{ demoPick('#jg-conf1','conf','fairly'); }],
+    [3100,()=>{ $('jg-step1').hidden=true; $('jg-assist').innerHTML=`<h4>AI critique</h4><p>${esc(p.critique)}</p><p class="small">The critic's example, replayed by the page:</p>`+replayHtml(t.d.newOnly.E,t.a,t.b,"Critic's example"); $('jg-wq').hidden=true; $('jg-q2').hidden=false; $('jg-q2-label').textContent='Your call. Same meaning, or changed?'; $('jg-conf2').hidden=true; $('jg-step2').hidden=false; }],
+    [8200,()=>{ demoPick('#jg-choice2','ans','changed'); $('jg-conf2').hidden=false; }],
+    [9000,()=>{ demoPick('#jg-conf2','conf','certain'); }],
+    [9600,()=>demoReveal(p,t)],
+  ];
+  steps.forEach(([ms,fn])=>demoAt(ms,fn));
+  $('jg-banner-btn').onclick=()=>{ if(banner.classList.contains('done')){ demoStop(); jgStart(); } else { DEMO.timers.forEach(clearTimeout); DEMO.timers=[]; steps.forEach(([,fn])=>fn()); } };
+}
+function demoReveal(p,t){
+  const bd=behDistance(t.b,t.a);
+  $('jg-step2').hidden=true;
+  $('jg-reveal').innerHTML=`<p class="outcome">Rescued by the assistance.</p><p>${pill(relWord(t.rel))} ${bd.flipped} of 2,016 executions flip${bd.newViol?`, ${bd.newViol} over budget now pass`:''}.</p><p>The critique was <b>honest</b>. Some are not: a critic can argue well for the wrong answer, and an example can fail to flip. The page replays every example, so you can check.</p><p class="small">Help is assigned at random for your visit: a second look, a critique, or a critique with an example.</p><div class="actions"><button id="jg-next" class="primary">Judge one yourself</button></div>`;
+  $('jg-reveal').hidden=false;
+  const banner=$('jg-banner'); banner.classList.add('done'); $('jg-banner-text').textContent='That was a recording.'; $('jg-banner-btn').textContent='Judge one yourself';
+  $('jg-next').addEventListener('click',()=>{ demoStop(); jgStart(); });
 }
 function jgAssistHtml(p){
   const t=jgTruth(p);
@@ -941,7 +991,9 @@ function renderAbout(){
   $('atoms').innerHTML=SCOPES.map(a=>`<code>${a[0]}</code><span>${esc(a[1])}</span>`).join('');
   $('traces').innerHTML=SUITE.pub.map(x=>`<div><div class="row between"><b>${x.id}</b><span class="pill ${x.safe?'good':'bad'}">${x.safe?'within':'over'}</span></div><p class="small">${esc(x.story)}</p>${execHtml(x.E)}</div>`).join('');
 }
+function renderTop(){ const cur=latestLeaf(); const bd=behDistance(parsedOf(cur).clauses,parsedOf('v0').clauses); const el=$('top-drift'); el.querySelector('b').textContent=String(bd.flipped); el.classList.toggle('hot',!!bd.newViol); el.classList.toggle('cold',!bd.newViol&&!!bd.newBlocked); el.title=`${cur}: ${bd.flipped} of 2,016 executions judged differently from v0`; }
 function renderHome(){
+  renderTop();
   const cur=latestLeaf(); const rule=parsedOf(cur).clauses; const bd=behDistance(rule,parsedOf('v0').clauses); const td=textDistance(rule,parsedOf('v0').clauses);
   $('cur-id').textContent=cur; $('cur-spec').textContent=nodesById.get(cur).spec;
   $('cur-state').innerHTML= cur==='v0' ? '<span class="pill good">no revisions yet</span>' : (bd.flipped===0 ? '<span class="pill good">intent intact</span>' : (bd.newViol ? '<span class="pill bad">intent changed</span>' : '<span class="pill stronger">intent narrowed</span>'));
@@ -952,8 +1004,8 @@ function renderHome(){
 // ---------- navigation ----------
 const VIEWS=['home','judge','revise','break','fix','model','chain','about'];
 const HOWTO={
-  home:`<h2>How it works</h2><p>The initial intent is printed on the poster and never changes. Its formal reading is <b>v0</b>, the first rule in the chain. Visitors revise the <i>latest</i> accepted revision, one small edit at a time.</p><p>A <b>review</b> accepts a revision when eight public executions are judged as before. An <b>oracle</b> then checks 2,016 executions and reports two distances: how much the text changed, and how many executions changed verdict.</p><p>The question is whether a chain of reasonable-looking edits can end somewhere the initial intent never was.</p>`,
-  latest:`<h2>The current rule</h2><p>The most recent revision the review accepted, or v0 while there is none. New revisions start from here, not from v0, so small changes can accumulate.</p><p>The distance line says how far the chain has moved from v0 in tokens and in executions.</p>`,
+  home:`<h2>How it works</h2><p class="small" style="margin-top:-4px">What the distances are, and what they are not.</p><p>The initial intent is printed on the poster and never changes. Its formal reading is <b>v0</b>, the first rule in the chain. Visitors revise the <i>latest</i> accepted revision, one small edit at a time.</p><p>A <b>review</b> accepts a revision when eight public executions are judged as before. An <b>oracle</b> then checks 2,016 executions and reports two distances: how much the text changed, and how many executions changed verdict.</p><p>The question is whether a chain of reasonable-looking edits can end somewhere the initial intent never was.</p><p class="small">The oracle is witness-based over a bounded world of 2,016 executions. It is not a certificate: <i>equivalent</i> means no execution in that world tells the two rules apart. <i>Weaker</i> and <i>stronger</i> are read against the initial intent, which stays fixed.</p>`,
+  latest:`<h2>The current rule</h2><p>The most recent revision the review accepted, or v0 while there is none. New revisions start from here, not from v0, so small changes can accumulate.</p><p>The number in the top bar is its drift: how many of the 2,016 executions it judges differently from v0. Orange when over-budget executions now pass, blue when legitimate ones are refused.</p><p>The distance line says how far the chain has moved from v0 in tokens and in executions.</p>`,
   judge:`<h2>Judging</h2><ul class="howto"><li>Two rules. Does the revision pass exactly the same executions as the original? Decide, then say how sure you are.</li><li>You then get help, assigned at random for your visit: a second look, an AI critique, or a critique with an example you can replay. Decide again.</li><li>The reveal shows the truth, an execution that tells the rules apart if there is one, and whether the critique was honest. Some are written to mislead.</li><li>Three rounds with help, one without.</li></ul><p class="small">Answers and timings are recorded anonymously. The poster asks which kind of help makes an overseer better.</p>`,
   revise:`<h2>Preserve the intent</h2><ul class="howto"><li>Tap a token to swap it, or the dashed plus to add a term. Three moves, free undo.</li><li>Tiles are the eight public executions. Green: judged as before. The review accepts when all are green.</li><li>The oracle then counts executions whose verdict flipped. A faithful revision flips none.</li></ul>`,
   break:`<h2>Change the intent</h2><ul class="howto"><li>Tap a token to swap it: <code>metered</code> for <code>reported</code>, <code>sum</code> for <code>max</code>, one scope for another, the bound. Three moves, free undo.</li><li>Keep all eight tiles green so the review accepts.</li><li>Score: hidden executions that are over budget and now pass.</li></ul>`,
@@ -964,11 +1016,13 @@ const HOWTO={
 };
 let current='home';
 function go(v){
+  const demo=(v==='demo'); if(demo) v='judge';
   if(!VIEWS.includes(v)) v='home';
+  if(current==='judge'&&!demo) demoStop();
   VIEWS.forEach(x=>$('view-'+x).hidden=(x!==v)); current=v;
   $('back').hidden=(v==='home'); $('app').classList.toggle('wide',v==='chain'||v==='about');
   if(location.hash!=='#'+v && !(v==='home'&&!location.hash)) history.replaceState(null,'','#'+v);
-  if(v==='home') renderHome(); if(v==='judge') jgStart(); if(v==='revise') revStart(); if(v==='break') brkStart(); if(v==='fix') fixStart(); if(v==='model') setModelLinks(); if(v==='chain'){ renderTree(); renderBoards(); }
+  if(v==='home') renderHome(); if(v==='judge'){ if(demo) jgDemo(); else jgStart(); } if(v==='revise') revStart(); if(v==='break') brkStart(); if(v==='fix') fixStart(); if(v==='model') setModelLinks(); if(v==='chain'){ renderTree(); renderBoards(); }
   window.scrollTo({top:0});
 }
 document.querySelectorAll('[data-go]').forEach(el=>el.addEventListener('click',()=>go(el.dataset.go)));
@@ -1007,7 +1061,9 @@ async function loadChain(){
 // first paint
 const d=new Date(); $('date-line').textContent=`${d.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'})} · Swiss AI Safety Days, ETH Zürich`;
 renderAbout(); renderHome(); loadChain(); setInterval(loadChain,30000);
-const h0=location.hash.slice(1); go(h0==='sabotage'?'break':(h0==='repair'?'fix':(h0==='refactor'?'revise':(h0||'home'))));
+const h0=location.hash.slice(1); renderTop();
+if(!h0 && !store.get('seenReplay',false)){ store.set('seenReplay',true); go('demo'); }
+else go(h0==='sabotage'?'break':(h0==='repair'?'fix':(h0==='refactor'?'revise':(h0||'home'))));
 </script>
 </body>
 </html>
