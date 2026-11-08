@@ -448,8 +448,19 @@ function renderProse(el,tokensBySentence,{marks=null,onTap=null,only=null,markTo
 function sentenceText(toks){ return toks.join(''); }
 
 // ---------- dictionary (Datamuse) ----------
-const dcache=new Map();
-async function dmFetch(q){ if(dcache.has(q)) return dcache.get(q); const r=await fetch(DM+'?'+q,{cache:'force-cache'}); const j=r.ok?await r.json():[]; dcache.set(q,j); return j; }
+const dcache=new Map(); const dpending=new Map(); let dmActive=0; const dmQueue=[]; const DM_MAX=3;
+function dmSlot(){ return new Promise(res=>{ const go=()=>{ dmActive++; res(); }; if(dmActive<DM_MAX) go(); else dmQueue.push(go); }); }
+function dmRelease(){ dmActive--; const next=dmQueue.shift(); if(next) next(); }
+// Datamuse is served through CloudFront, which caches each URL for a day together with the CORS header of the first
+// requester. A URL first fetched from another origin, or from no browser at all, then fails for this page. So every
+// request carries this page's origin as a cache key, and a failed attempt retries with a one-off key.
+const DM_KEY=encodeURIComponent((location.hostname||'local').replace(/[^a-z0-9.-]/gi,'')||'local');
+async function dmOnce(q,bust){ const r=await fetch(DM+'?'+q+'&o='+DM_KEY+(bust?'&r='+Date.now().toString(36):'')); if(!r.ok) throw new Error('datamuse '+r.status); return r.json(); }
+async function dmFetch(q){
+  if(dcache.has(q)) return dcache.get(q); if(dpending.has(q)) return dpending.get(q);
+  const p=(async()=>{ await dmSlot(); try{ let j=null; for(let attempt=0;attempt<3&&j===null;attempt++){ try{ j=await dmOnce(q,attempt>0); }catch(e){ await new Promise(r=>setTimeout(r,200*attempt)); } } if(j===null){ dpending.delete(q); return []; } dcache.set(q,j); dpending.delete(q); return j; } finally{ dmRelease(); } })();
+  dpending.set(q,p); return p;
+}
 function parseDef(d){ const m=/^([a-z]+)\t(.*)$/.exec(d||''); return m?{pos:m[1],def:m[2].trim()}:{pos:'',def:(d||'').trim()}; }
 const POS_NAME={n:'noun',v:'verb',adj:'adjective',adv:'adverb',u:''};
 async function defOf(word){ const j=await dmFetch('sp='+encodeURIComponent(word.toLowerCase())+'&md=dp&max=1'); const w=j[0]; if(!w||!w.defs||!w.defs.length) return null; const d=parseDef(w.defs[0]); return {word:w.word,pos:POS_NAME[d.pos]||d.pos,def:d.def,all:w.defs.slice(0,3).map(parseDef)}; }
@@ -592,7 +603,7 @@ function edRender(){
 async function edTap(si,i,word){
   if(ED.who==='model') return; ED.author=''; ED.why=''; ED.pick={s:si,i,word}; openSheet(`<div class="def head"><b>${esc(word)}</b><span class="pos" id="sh-pos"></span><p id="sh-def" class="small">Looking it up…</p></div>`,[]);
   try{ const [d,alts]=await Promise.all([defOf(word),synonymsOf(word)]); const pos=$('sh-pos'), def=$('sh-def'); if(pos&&def){ pos.textContent=d?d.pos:''; def.textContent=d?d.def:'No dictionary entry for this form.'; }
-    const box=$('sheet-opts'); box.innerHTML=''; if(!alts.length){ box.innerHTML='<p class="small">No alternatives found for this word. Try another.</p>'; }
+    const box=$('sheet-opts'); box.innerHTML=''; if(!alts.length){ box.innerHTML='<p class="small">No alternatives came back for this word. Tap it again to retry, or try another word.</p>'; }
     alts.forEach(a=>{ const b=document.createElement('button'); b.type='button'; b.className='alt'; b.innerHTML=`<b>${esc(matchCase(word,a.word))}</b><span>${esc(a.def)}</span>`; b.addEventListener('click',()=>{ closeSheet(); edChoose(a,d); }); box.appendChild(b); });
     const c=document.createElement('button'); c.type='button'; c.textContent='cancel'; c.className='ghost'; c.addEventListener('click',closeSheet); box.appendChild(c);
   }catch(e){ const def=$('sh-def'); if(def) def.textContent='The dictionary did not answer. Try again in a moment.'; }
